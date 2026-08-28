@@ -1,5 +1,5 @@
 -- 599 AREA | Official Loader by MINUTZ
-local BASE = "https://raw.githubusercontent.com/yudamaulanakece-lab/599-AREA/main/"
+local BASE = "https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/"
 local ok, source = pcall(function()
     return game:HttpGet(BASE .. "Main.lua")
 end)
