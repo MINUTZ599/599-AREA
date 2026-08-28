@@ -1,22 +1,24 @@
--- 599 AREA V8.1 | Main bootstrap by MINUTZ
-local BASE = "https://raw.githubusercontent.com/yudamaulanakece-lab/599-AREA/main/Parts/"
-local parts = {}
+-- 599 AREA V8.1 - MINUTZ TRACER EDITION
+-- Main bootstrap: joins source chunks and executes them in order.
 
-for i = 1, 7 do
-    local url = BASE .. "part_" .. i .. ".lua"
-    local ok, source = pcall(function()
-        return game:HttpGet(url)
+local BASE = "https://raw.githubusercontent.com/yudamaulanakece-lab/599-AREA/main/Source/"
+local source = table.create(17)
+
+for i = 0, 16 do
+    local path = string.format("chunk_%02d.lua", i)
+    local ok, data = pcall(function()
+        return game:HttpGet(BASE .. path)
     end)
 
     if not ok then
-        error("[599 AREA] Failed to download source part " .. i .. ": " .. tostring(source))
+        error("[599 AREA] Failed to download " .. path .. ": " .. tostring(data))
     end
 
-    parts[#parts + 1] = source
+    source[#source + 1] = data
 end
 
-local source = table.concat(parts)
-local fn, compileError = loadstring(source)
+local fullSource = table.concat(source)
+local fn, compileError = loadstring(fullSource)
 
 if not fn then
     error("[599 AREA] Failed to compile Main source: " .. tostring(compileError))
