@@ -71,6 +71,19 @@ if not af then return fail("ADDON COMPILE ERROR: "..tostring(ae)) end
 local ok3,re=xpcall(af,function(e) return tostring(e) end)
 if not ok3 then return fail("ADDON RUNTIME ERROR: "..tostring(re)) end
 
+status("loading Air Walk...",false)
+local ok4,airwalk=pcall(function()
+    return game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/0c91e6a598281fa21c73aa20530fa52a4a5301ee/V8_5/AirWalk.lua")
+end)
+if not ok4 or type(airwalk)~="string" or #airwalk==0 then
+    return fail("AIR WALK HTTP ERROR: "..tostring(airwalk))
+end
+
+local wf,we=loadstring(airwalk)
+if not wf then return fail("AIR WALK COMPILE ERROR: "..tostring(we)) end
+local ok5,wre=xpcall(wf,function(e) return tostring(e) end)
+if not ok5 then return fail("AIR WALK RUNTIME ERROR: "..tostring(wre)) end
+
 status("loaded successfully",false)
 task.delay(2,function()
     local g=pg:FindFirstChild("AREA599_V85_DIAGNOSTIC")
