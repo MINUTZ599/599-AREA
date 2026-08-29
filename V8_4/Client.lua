@@ -58,6 +58,13 @@ for i = 0, 9 do
     end)
     if not ok then return fail("HTTP ERROR " .. path .. ": " .. tostring(data)) end
     if type(data) ~= "string" or #data == 0 then return fail("EMPTY CHUNK " .. path) end
+
+    -- Some executors/raw HTTP layers append a newline to each response.
+    -- These V8.4 chunks were originally split mid-token, so remove only
+    -- trailing CR/LF before joining them back together.
+    if i < 9 then
+        data = data:gsub("[\r\n]+$", "")
+    end
     chunks[#chunks + 1] = data
 end
 
