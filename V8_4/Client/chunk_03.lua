@@ -102,7 +102,7 @@ end
 -- UTILITY
 --========================================================
 
-local noclipToggle, godToggle
+local noclipToggle, godToggle, knockbackToggle
 local saveBtn, tpSavedBtn, sitBtn, resetCharBtn
 
 do
@@ -128,7 +128,7 @@ do
 		tb.MouseButton1Click:Connect(function() if rootPart and positionSlots[i] then rootPart.CFrame=positionSlots[i]+Vector3.new(0,3,0); notify("Teleported to slot "..i) else notify("Slot "..i.." empty") end end)
 	end
 
-	local knockbackToggle = toggleCard(
+	knockbackToggle = toggleCard(
 		p,
 		"WALK KNOCKBACK [ K ]",
 		"Server-controlled launch aura; does not rely on player collision",
