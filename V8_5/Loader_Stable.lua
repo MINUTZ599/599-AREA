@@ -21,5 +21,5 @@ for i=0,9 do local ok,s=pcall(function()return game:HttpGet(base..string.format(
 local fn,err=loadstring(table.concat(c));if not fn then return fail("BASE COMPILE ERROR: "..tostring(err))end;local ok,runerr=xpcall(fn,function(e)return tostring(e)end);if not ok then return fail("BASE RUNTIME ERROR: "..tostring(runerr))end
 if not loadAddon("integrated Visuals addon","https://raw.githubusercontent.com/MINUTZ599/599-AREA/d49c32a6c4a02410f1f8fdaf4309b8840f43f106/V8_5/Addon.lua","ADDON") then return end
 if not loadAddon("Air Walk + Height Control","https://raw.githubusercontent.com/MINUTZ599/599-AREA/89e564071765913da32b12c727b5cc8990fa6882/V8_5/AirWalk.lua","AIR WALK") then return end
-if not loadAddon("World Skybox Manager","https://raw.githubusercontent.com/MINUTZ599/599-AREA/d091d606bdcd50326c7f77862634bb4734047c45/V8_5/SkyboxWorld.lua","SKYBOX") then return end
+if not loadAddon("World Skybox Manager","https://raw.githubusercontent.com/MINUTZ599/599-AREA/5c98d8a3e0ead5d1ab25da63d4ec9a0c4ecc7831/V8_5/SkyboxWorld.lua","SKYBOX") then return end
 status("loaded successfully",false);task.delay(2,function()local g=pg:FindFirstChild("AREA599_V85_DIAGNOSTIC");if g then g:Destroy()end end)
