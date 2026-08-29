@@ -55,6 +55,17 @@ local function showPage()
 end
 tab.MouseButton1Click:Connect(showPage)
 
+-- V8.5 runs as a separate loadstring, so it cannot share the original
+-- selectPage() local from V8.4. Explicitly hide Tracker+ whenever any
+-- original sidebar tab is clicked.
+for _,b in ipairs(sidebar:GetChildren()) do
+ if b:IsA("TextButton") and b~=tab then
+  b.MouseButton1Click:Connect(function()
+   page.Visible=false
+  end)
+ end
+end
+
 local tpToggle=toggle(page,"CLICK TELEPORT [ T ]",UDim2.fromOffset(0,42))
 local function setTP(v) clickTP=v;tpToggle.Text="CLICK TELEPORT [ T ]  ["..(v and "ON" or "OFF").."]";notify("Click Teleport "..(v and "ON" or "OFF")) end
 tpToggle.MouseButton1Click:Connect(function() setTP(not clickTP) end)
