@@ -60,7 +60,7 @@ if not ok then return fail("BASE RUNTIME ERROR: "..tostring(runerr)) end
 
 status("loading Tracker+ addon...",false)
 local ok2,addon=pcall(function()
-    return game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/f2373869763fad8b472f086fa601c2ac13f14e55/V8_5/Addon.lua")
+    return game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/63502dbab6f37fc9f44d02312ccdef05ab110c5f/V8_5/Addon.lua")
 end)
 if not ok2 or type(addon)~="string" or #addon==0 then
     return fail("ADDON HTTP ERROR: "..tostring(addon))
