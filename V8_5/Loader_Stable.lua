@@ -58,9 +58,9 @@ if not fn then return fail("BASE COMPILE ERROR: "..tostring(err)) end
 local ok,runerr=xpcall(fn,function(e) return tostring(e) end)
 if not ok then return fail("BASE RUNTIME ERROR: "..tostring(runerr)) end
 
-status("loading Tracker+ addon...",false)
+status("loading integrated Visuals addon...",false)
 local ok2,addon=pcall(function()
-    return game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/63502dbab6f37fc9f44d02312ccdef05ab110c5f/V8_5/Addon.lua")
+    return game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/d49c32a6c4a02410f1f8fdaf4309b8840f43f106/V8_5/Addon.lua")
 end)
 if not ok2 or type(addon)~="string" or #addon==0 then
     return fail("ADDON HTTP ERROR: "..tostring(addon))
