@@ -1,6 +1,6 @@
 -- 599 AREA V9 PREVIEW LOADER
 local ok,src=pcall(function()
-    return game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/Client.lua?v=4")
+    return game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/Client.lua?v=5")
 end)
 if not ok then
     warn("[599 V9 PREVIEW] HTTP ERROR: "..tostring(src))
