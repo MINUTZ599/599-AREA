@@ -1,4 +1,4 @@
--- 599 AREA V9 PREVIEW DIAGNOSTIC LOADER v8
+-- 599 AREA V9 PREVIEW LOADER v9
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local pg = player:WaitForChild("PlayerGui")
@@ -24,47 +24,42 @@ box.TextColor3 = Color3.fromRGB(210,170,255)
 box.Font = Enum.Font.GothamBold
 box.TextSize = 14
 box.TextWrapped = true
-box.Text = "599 V9 DIAGNOSTIC | LOADER OK - downloading Client_v7..."
+box.Text = "599 V9 | loading preview..."
 box.Parent = diag
 Instance.new("UICorner",box).CornerRadius = UDim.new(0,12)
 local st = Instance.new("UIStroke",box)
 st.Color = Color3.fromRGB(140,70,255)
 st.Thickness = 1.3
 
-local url = "https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/Client_v7.lua?v=8"
-local ok, src = pcall(function()
-    return game:HttpGet(url)
-end)
-
-if not ok then
-    box.TextColor3 = Color3.fromRGB(255,100,120)
-    box.Text = "599 V9 DIAGNOSTIC | HTTP ERROR: " .. tostring(src)
-    return
+local function run(url,label)
+    local ok,src = pcall(function() return game:HttpGet(url) end)
+    if not ok then
+        box.TextColor3 = Color3.fromRGB(255,100,120)
+        box.Text = "599 V9 | "..label.." HTTP ERROR: "..tostring(src)
+        return false
+    end
+    local fn,err = loadstring(src)
+    if not fn then
+        box.TextColor3 = Color3.fromRGB(255,100,120)
+        box.Text = "599 V9 | "..label.." COMPILE ERROR: "..tostring(err)
+        return false
+    end
+    local rok,rerr = xpcall(fn,function(e) return tostring(e) end)
+    if not rok then
+        box.TextColor3 = Color3.fromRGB(255,100,120)
+        box.Text = "599 V9 | "..label.." RUNTIME ERROR: "..tostring(rerr)
+        return false
+    end
+    return true
 end
 
-box.Text = "599 V9 DIAGNOSTIC | DOWNLOAD OK (" .. tostring(#src) .. " bytes) - compiling..."
+if not run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/Client_v7.lua?v=9","CLIENT") then return end
 
-local fn, err = loadstring(src)
-if not fn then
-    box.TextColor3 = Color3.fromRGB(255,100,120)
-    box.Text = "599 V9 DIAGNOSTIC | COMPILE ERROR: " .. tostring(err)
-    return
-end
-
-box.Text = "599 V9 DIAGNOSTIC | COMPILE OK - running client..."
-
-local rok, runtimeErr = xpcall(fn, function(e)
-    return tostring(e)
-end)
-
-if not rok then
-    box.TextColor3 = Color3.fromRGB(255,100,120)
-    box.Text = "599 V9 DIAGNOSTIC | RUNTIME ERROR: " .. tostring(runtimeErr)
-    return
-end
+task.wait(0.15)
+run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/IconPatch_v9.lua?v=9","ICONS")
 
 box.TextColor3 = Color3.fromRGB(100,255,170)
-box.Text = "599 V9 DIAGNOSTIC | SUCCESS - GUI loaded"
-task.delay(3,function()
+box.Text = "599 V9 | SUCCESS"
+task.delay(2,function()
     if diag and diag.Parent then diag:Destroy() end
 end)
