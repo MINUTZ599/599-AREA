@@ -1,4 +1,4 @@
--- 599 AREA V9 PREVIEW LOADER v17
+-- 599 AREA V9 PREVIEW LOADER v18
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local pg = player:WaitForChild("PlayerGui")
@@ -53,13 +53,13 @@ local function run(url,label)
     return true
 end
 
-if not run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/Client_v7.lua?v=17","CLIENT") then return end
+if not run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/Client_v7.lua?v=18","CLIENT") then return end
 task.wait(0.12)
-run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/IconPatch_v9.lua?v=17","ICONS")
+run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/IconPatch_v9.lua?v=18","ICONS")
 task.wait(0.08)
-run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/HomeIconFix_v12.lua?v=17","HOME ICON")
+run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/HomeIconFix_v12.lua?v=18","HOME ICON")
 task.wait(0.08)
-run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/BannerRoblox_v14.lua?v=17","BANNER")
+run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/BannerRoblox_v14.lua?v=18","BANNER")
 
 box.TextColor3 = Color3.fromRGB(100,255,170)
 box.Text = "599 V9 | SUCCESS"
