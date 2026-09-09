@@ -1,4 +1,4 @@
--- 599 AREA V9 PREVIEW LOADER v12
+-- 599 AREA V9 PREVIEW LOADER v13
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local pg = player:WaitForChild("PlayerGui")
@@ -53,13 +53,15 @@ local function run(url,label)
     return true
 end
 
-if not run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/Client_v7.lua?v=12","CLIENT") then return end
+if not run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/Client_v7.lua?v=13","CLIENT") then return end
 task.wait(0.12)
-run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/IconPatch_v9.lua?v=12","ICONS")
+run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/IconPatch_v9.lua?v=13","ICONS")
 task.wait(0.08)
-run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/HomeIconFix_v12.lua?v=12","HOME ICON")
+run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/HomeIconFix_v12.lua?v=13","HOME ICON")
 task.wait(0.08)
-run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/BannerPatch_v12.lua?v=12","BANNER")
+run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/BannerPatch_v12.lua?v=13","BANNER")
+task.wait(0.08)
+run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/BannerTargetFix_v13.lua?v=13","BANNER TARGET")
 
 box.TextColor3 = Color3.fromRGB(100,255,170)
 box.Text = "599 V9 | SUCCESS"
