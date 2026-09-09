@@ -1,4 +1,4 @@
--- 599 AREA V9 PREVIEW LOADER v10
+-- 599 AREA V9 PREVIEW LOADER v11
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local pg = player:WaitForChild("PlayerGui")
@@ -53,10 +53,11 @@ local function run(url,label)
     return true
 end
 
-if not run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/Client_v7.lua?v=10","CLIENT") then return end
-
-task.wait(0.15)
-run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/IconPatch_v9.lua?v=10","ICONS")
+if not run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/Client_v7.lua?v=11","CLIENT") then return end
+task.wait(0.12)
+run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/IconPatch_v9.lua?v=11","ICONS")
+task.wait(0.08)
+run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/ProfilePatch_v11.lua?v=11","PROFILE")
 
 box.TextColor3 = Color3.fromRGB(100,255,170)
 box.Text = "599 V9 | SUCCESS"
