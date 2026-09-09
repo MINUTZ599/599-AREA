@@ -1,4 +1,4 @@
--- 599 AREA V9 banner framing v16
+-- 599 AREA V9 banner framing v18
 local Players=game:GetService("Players")
 local gui=Players.LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("AREA599_V9_PREVIEW",10)
 if not gui then return end
@@ -16,10 +16,19 @@ for _,obj in ipairs(gui:GetDescendants()) do
 end
 if not target then return end
 
+local parent=target.Parent
+if parent and parent:IsA("GuiObject") then
+    parent.ClipsDescendants=true
+end
+
 target.Image=NEW_IMAGE
 target.ImageTransparency=0
--- Reset ImageRect: Roblox asset IDs are not guaranteed to use source-pixel dimensions.
 target.ImageRectOffset=Vector2.new(0,0)
 target.ImageRectSize=Vector2.new(0,0)
--- Show the complete uploaded artwork instead of center-cropping it.
 target.ScaleType=Enum.ScaleType.Fit
+
+-- Manual framing: use a larger square image and clip it inside the hero banner.
+-- This keeps both heads visible and gives a medium zoom similar to the reference.
+target.AnchorPoint=Vector2.new(1,0)
+target.Size=UDim2.fromOffset(360,360)
+target.Position=UDim2.new(1,0,0,-58)
