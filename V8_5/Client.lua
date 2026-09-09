@@ -1,5 +1,5 @@
 -- 599 AREA V8.5 - MINUTZ TRACKER EDITION
--- Split loader: V8.4 base and V8.5 addon compile separately to avoid Luau 200-local-register limit.
+-- Split loader: V8.4 base and V8.5 addons compile separately to avoid Luau 200-local-register limit.
 local Players=game:GetService("Players")
 local lp=Players.LocalPlayer
 local pg=lp:WaitForChild("PlayerGui")
@@ -9,6 +9,17 @@ local function status(msg,bad)
  local t=g:FindFirstChild("Status");t.TextColor3=bad and Color3.fromRGB(255,80,80) or Color3.fromRGB(255,145,0);t.Text="599 AREA V8.5 | "..msg
 end
 local function fail(s) status(s,true);warn("[599 V8.5] "..s) end
+local function runRemoteModule(label,url)
+ status("loading "..label.."...",false)
+ local ok,src=pcall(function() return game:HttpGet(url) end)
+ if not ok or type(src)~="string" then return false,label.." HTTP ERROR: "..tostring(src) end
+ local fn,ce=loadstring(src)
+ if not fn then return false,label.." COMPILE ERROR: "..tostring(ce) end
+ local rok,re=xpcall(fn,function(e) return tostring(e) end)
+ if not rok then return false,label.." RUNTIME ERROR: "..tostring(re) end
+ return true
+end
+
 status("loading stable V8.4 base...",false)
 local base="https://raw.githubusercontent.com/MINUTZ599/599-AREA/417965fea92cf2b472a48edea27f19de8b0e67b2/V8_4/Client/"
 local c={}
@@ -21,10 +32,12 @@ for i=0,9 do
 end
 local fn,err=loadstring(table.concat(c));if not fn then return fail("BASE COMPILE ERROR: "..tostring(err)) end
 local ok,runerr=xpcall(fn,function(e) return tostring(e) end);if not ok then return fail("BASE RUNTIME ERROR: "..tostring(runerr)) end
-status("loading Tracker+ addon...",false)
-local ok2,addon=pcall(function() return game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V8_5/Addon.lua?v=2") end)
-if not ok2 then return fail("ADDON HTTP ERROR: "..tostring(addon)) end
-local af,ae=loadstring(addon);if not af then return fail("ADDON COMPILE ERROR: "..tostring(ae)) end
-local ok3,re=xpcall(af,function(e) return tostring(e) end);if not ok3 then return fail("ADDON RUNTIME ERROR: "..tostring(re)) end
+
+local okAddon,errAddon=runRemoteModule("Tracker+ addon","https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V8_5/Addon.lua?v=3")
+if not okAddon then return fail(errAddon) end
+
+local okAnime,errAnime=runRemoteModule("Anime Dice tab","https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V8_5/AnimeDice.lua?v=1")
+if not okAnime then return fail(errAnime) end
+
 status("loaded successfully",false)
 task.delay(2,function() local g=pg:FindFirstChild("AREA599_V85_DIAGNOSTIC");if g then g:Destroy() end end)
