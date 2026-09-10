@@ -68,7 +68,7 @@ reset.MouseButton1Click:Connect(function()
  for _,p in ipairs(Players:GetPlayers()) do if p.Character then for _,d in ipairs(p.Character:GetDescendants()) do if d:IsA("Highlight") and string.find(d.Name,"599",1,true) then d:Destroy() end end end end
  local ov=pg:FindFirstChild("AREA599_V25_VISUAL_OVERLAY") if ov then ov:Destroy() end
  task.defer(function()
-   local src=game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/LoaderClean_v29.lua?reset="..tostring(math.floor(os.clock()*1000)))
+   local src=game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/LoaderClean_v41.lua?reset="..tostring(math.floor(os.clock()*1000)))
    local fn=loadstring(src);if fn then fn() end
  end)
 end)
