@@ -2,6 +2,7 @@
 -- Current V41 stack preserved. Adds compact 430x210 live loading screen tied to real module loading.
 local Players=game:GetService("Players")
 local TweenService=game:GetService("TweenService")
+local RunService=game:GetService("RunService")
 local player=Players.LocalPlayer
 local pg=player:WaitForChild("PlayerGui")
 
@@ -105,24 +106,47 @@ percentage.Font=Enum.Font.GothamBold
 percentage.TextXAlignment=Enum.TextXAlignment.Left
 percentage.Parent=panel
 
+-- Smooth visual progress. Real module completion only moves this target.
+local displayedProgress=0
+local targetProgress=0
+local progressConnection
+
+progressConnection=RunService.RenderStepped:Connect(function(dt)
+    if not loadingGui.Parent then return end
+    local diff=targetProgress-displayedProgress
+    if math.abs(diff)<0.01 then
+        displayedProgress=targetProgress
+    else
+        displayedProgress=displayedProgress + diff*math.min(dt*8,1)
+    end
+    progress.Size=UDim2.new(displayedProgress/100,0,1,0)
+    percentage.Text=tostring(math.floor(displayedProgress+0.5)).."%"
+end)
+
 local function SetProgress(value)
-    value=math.clamp(value,0,100)
-    percentage.Text=tostring(math.floor(value)).."%"
-    TweenService:Create(
-        progress,
-        TweenInfo.new(0.22,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),
-        {Size=UDim2.new(value/100,0,1,0)}
-    ):Play()
+    targetProgress=math.clamp(value,0,100)
 end
 
 local function FinishLoading()
     SetProgress(100)
 
-    -- Main GUI is revealed at the exact moment loading reaches 100%.
+    -- Let the smooth bar visibly reach 100% before revealing HOME.
+    while displayedProgress<99.85 do
+        RunService.RenderStepped:Wait()
+    end
+    displayedProgress=100
+    progress.Size=UDim2.new(1,0,1,0)
+    percentage.Text="100%"
+
     local mainGui=pg:FindFirstChild("AREA599_V9_PREVIEW")
     local mainRoot=mainGui and mainGui:FindFirstChild("Root",true)
     if mainRoot and mainRoot.Parent then
         mainRoot.Visible=true
+    end
+
+    if progressConnection then
+        progressConnection:Disconnect()
+        progressConnection=nil
     end
 
     TweenService:Create(image,TweenInfo.new(0.3),{ImageTransparency=1}):Play()
@@ -182,7 +206,7 @@ local gui=pg:WaitForChild("AREA599_V9_PREVIEW",10)
 local root=gui and gui:FindFirstChild("Root",true)
 if root then root.Visible=false end
 
--- V41 approved stack, unchanged. Progress updates only after each real module finishes.
+-- V41 approved stack, unchanged. Progress targets update only after each real module finishes.
 run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/IconPatch_v9.lua?clean=41b",16)
 run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/HomeIconFix_v12.lua?clean=41c",20)
 run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/BannerRoblox_v14.lua?clean=41d",24)
@@ -203,7 +227,6 @@ run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/HomeBa
 run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/HomeBannerFull_v37.lua?clean=41s",97)
 run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/HomeBannerFill_v38.lua?clean=41t",99)
 
--- 100% = reveal HOME immediately, then fade loading card away.
 FinishLoading()
 
-print("[599 V41] startup ready - HOME revealed at 100%")
+print("[599 V41] startup ready - smooth loading reached 100% then HOME revealed")
