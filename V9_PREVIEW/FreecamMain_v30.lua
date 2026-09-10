@@ -130,22 +130,50 @@ end
 local function stopFreecam()
     if conn then conn:Disconnect();conn=nil end
     ContextActionService:UnbindAction(ACTION)
-    local cam=workspace.CurrentCamera
-    if cam then
-        cam.CameraType=saved.CameraType or Enum.CameraType.Custom
-        if saved.CameraSubject and saved.CameraSubject.Parent then cam.CameraSubject=saved.CameraSubject end
-        if saved.CFrame then cam.CFrame=saved.CFrame end
-        if saved.FOV then cam.FieldOfView=saved.FOV end
-    end
+
     UIS.MouseBehavior=saved.MouseBehavior or Enum.MouseBehavior.Default
     UIS.MouseIconEnabled=saved.MouseIconEnabled~=false
+
     local _,hum,root=getChar()
     if hum then
         if saved.WalkSpeed then hum.WalkSpeed=saved.WalkSpeed end
         if saved.JumpPower then hum.JumpPower=saved.JumpPower end
         if saved.AutoRotate~=nil then hum.AutoRotate=saved.AutoRotate end
     end
-    if root and saved.RootAnchored~=nil then root.Anchored=saved.RootAnchored end
+    if root and saved.RootAnchored~=nil then
+        root.Anchored=saved.RootAnchored
+        root.AssemblyLinearVelocity=Vector3.zero
+        root.AssemblyAngularVelocity=Vector3.zero
+    end
+
+    local cam=workspace.CurrentCamera
+    if cam then
+        if saved.FOV then cam.FieldOfView=saved.FOV end
+        cam.CameraType=Enum.CameraType.Custom
+        if hum and hum.Parent then
+            cam.CameraSubject=hum
+        elseif saved.CameraSubject and saved.CameraSubject.Parent then
+            cam.CameraSubject=saved.CameraSubject
+        end
+    end
+
+    -- Give Roblox's default camera controller one frame to retake control.
+    task.defer(function()
+        RunService.RenderStepped:Wait()
+        local currentCam=workspace.CurrentCamera
+        local _,currentHum,currentRoot=getChar()
+        if currentCam and not enabled then
+            currentCam.CameraType=Enum.CameraType.Custom
+            if currentHum and currentHum.Parent then
+                currentCam.CameraSubject=currentHum
+            end
+            if currentRoot then
+                local focus=currentRoot.Position + Vector3.new(0,2,0)
+                local back=currentRoot.CFrame.LookVector * -10
+                currentCam.CFrame=CFrame.new(focus + back + Vector3.new(0,4,0),focus)
+            end
+        end
+    end)
 end
 
 local function startFreecam()
