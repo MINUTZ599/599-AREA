@@ -49,17 +49,23 @@ local clearBtn=findButton("CLEAR")
 if allBtn then allBtn.MouseButton1Click:Connect(function() for i=1,16 do selected[i]=true;renderPlot(i) end end) end
 if clearBtn then clearBtn.MouseButton1Click:Connect(function() for i=1,16 do selected[i]=false;renderPlot(i) end end) end
 
+-- FIX: bind to the actual numeric delay label (0.5s) and its slider bar.
 local delayValue=.5
 local delayLabel=nil
 local sliderBar=nil
 for _,d in ipairs(page:GetDescendants()) do
-    if d:IsA("TextLabel") and string.find(string.upper(d.Text or ""),"COLLECT DELAY",1,true) then delayLabel=d end
+    if d:IsA("TextLabel") and string.match(d.Text or "","^%d+%.?%d*s$") then
+        delayLabel=d
+        break
+    end
 end
--- find the most likely horizontal slider near the delay label
 if delayLabel and delayLabel.Parent then
     local parent=delayLabel.Parent
     for _,d in ipairs(parent:GetChildren()) do
-        if d:IsA("Frame") and d.AbsoluteSize.X>150 and d.AbsoluteSize.Y<=16 then sliderBar=d break end
+        if d:IsA("Frame") and d.AbsoluteSize.X>150 and d.AbsoluteSize.Y<=16 then
+            sliderBar=d
+            break
+        end
     end
 end
 local dragging=false
@@ -67,7 +73,7 @@ local function setDelayFromX(x)
     if not sliderBar or sliderBar.AbsoluteSize.X<=0 then return end
     local p=math.clamp((x-sliderBar.AbsolutePosition.X)/sliderBar.AbsoluteSize.X,0,1)
     delayValue=math.floor((.5+(30-.5)*p)*10+.5)/10
-    if delayLabel then delayLabel.Text=string.format("COLLECT DELAY   %.1fs",delayValue) end
+    if delayLabel then delayLabel.Text=string.format("%.1fs",delayValue) end
     local fill=sliderBar:FindFirstChildWhichIsA("Frame")
     if fill then fill.Size=UDim2.new(p,0,1,0) end
 end
