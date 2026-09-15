@@ -267,7 +267,7 @@ neonToggle(movement,44,"SPEED","Increase walk speed",false,function(on)
     local _,hum=getChar()
     if hum then hum.WalkSpeed=on and speedValue or DEFAULT_SPEED end
 end)
-slider(movement,112,"SPEED VALUE",16,150,speedValue,function(v)
+slider(movement,112,"SPEED VALUE",16,500,speedValue,function(v)
     speedValue=v
     local _,hum=getChar()
     if state.speed and hum then hum.WalkSpeed=v end
@@ -315,7 +315,7 @@ neonToggle(movement,228,"FLY [ F ]","Fly in camera direction",false,function(on)
         if h then h.PlatformStand=true end
     end)
 end)
-slider(movement,296,"FLY SPEED",10,200,flySpeed,function(v) flySpeed=v end)
+slider(movement,296,"FLY SPEED",10,500,flySpeed,function(v) flySpeed=v end)
 
 -- High jump card
 local jumpCard=card(402,180)
