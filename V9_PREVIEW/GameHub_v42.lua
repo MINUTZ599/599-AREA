@@ -110,9 +110,14 @@ for _,n in ipairs({"PlotService","RollService","DiceShop","CollectBalance","Roll
 end
 local animeAllowed=signals>=2
 
-local packages=RS:FindFirstChild("Packages")
-local datas=packages and packages:FindFirstChild("Datas")
-local rideDetected=datas and datas:FindFirstChild("Eggs") and RS:FindFirstChild("Assets") and RS.Assets:FindFirstChild("Eggs")
+-- Ride A Pet detection: use the same objects as the tested RideAPet_v42 build.
+-- Do not depend on Packages/Datas/Assets, because those are not the live paths
+-- used by the working Ride A Pet script.
+local gameData=RS:FindFirstChild("GameData")
+local eggData=gameData and gameData:FindFirstChild("Eggs")
+local renderedEggs=workspace:FindFirstChild("RenderedEggs")
+local plots=workspace:FindFirstChild("Plots")
+local rideDetected=(eggData ~= nil) and (renderedEggs ~= nil) and (plots ~= nil)
 local detected=rideDetected and "Ride A Pet" or (animeAllowed and "Anime Dice" or "Unknown")
 
 local detect=Instance.new("TextLabel");detect.Position=UDim2.new(1,-230,0,77);detect.Size=UDim2.fromOffset(200,45)
