@@ -150,7 +150,7 @@ rideBtn.MouseButton1Click:Connect(function()
     end
     rideLoaded=true
     local ok,err=pcall(function()
-        local src=game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/RideAPet_v42.lua?v=20260916_1622")
+        local src=game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/RideAPet_v42.lua?v=20260916_2338")
         local fn,e=loadstring(src);if not fn then error(e) end;fn()
     end)
     if not ok then rideLoaded=false;warn("[599 RIDE A PET V42] "..tostring(err)) end
