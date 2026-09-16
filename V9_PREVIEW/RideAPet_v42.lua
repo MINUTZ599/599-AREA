@@ -96,8 +96,6 @@ local NEXT_DELAY = 0.20
 local FAIL_DELAY = 0.50
 
 local WALK_TIMEOUT = 45
-local ARRIVE_DISTANCE = 8
-local UnifiedAutoSync = nil
 
 
 local RETURN_POSITIONS = {
@@ -360,9 +358,6 @@ end
 
 -- Independent watcher: Baseplate itself is the finish zone.
 RunService.Heartbeat:Connect(function()
-    -- V42 ONE-CYCLE: saved return coordinate is the finish condition.
-    return
-    --[[
     if not WALKING_HOME
         or RETURN_COMPLETE
         or BASEPLATE_STOP_BUSY
@@ -387,7 +382,6 @@ RunService.Heartbeat:Connect(function()
     if rootInsideBaseplateXZ(root, baseplate) then
         task.spawn(forceStopOnBaseplate)
     end
-    ]]
 end)
 
 local function walkToBase()
@@ -396,77 +390,87 @@ local function walkToBase()
     end
 
     WALKING_HOME = true
+    RETURN_COMPLETE = false
+
+    RETURN_CYCLE_ID += 1
+    local myCycle = RETURN_CYCLE_ID
 
     local _, root, humanoid = getCharacter()
+
     local destination, destinationIndex, initialDistance =
         getNearestReturnPosition(root.Position)
 
     if not destination then
         warn("[RETURN] No return positions")
         WALKING_HOME = false
+        ACTIVE_RETURN_POSITION = nil
+        ACTIVE_RETURN_INDEX = nil
         return false
     end
 
+    ACTIVE_RETURN_POSITION = destination
+    ACTIVE_RETURN_INDEX = destinationIndex
+
     print("")
     print("==============================")
-    print("[RETURN] Walking to nearest saved position")
-    print("[SELECTED] Position #" .. tostring(destinationIndex))
+    print("[RETURN] New cycle #" .. tostring(myCycle))
+    print("[RETURN] Nearest position #" .. tostring(destinationIndex))
     print("[DESTINATION]", destination)
-    print("[DISTANCE]", math.floor(initialDistance * 10) / 10, "studs")
+    print(
+        "[DISTANCE]",
+        math.floor(initialDistance * 10) / 10,
+        "studs"
+    )
+    print("==============================")
 
     local started = os.clock()
     local lastMove = 0
 
-    while AUTO and os.clock() - started < WALK_TIMEOUT do
+    while os.clock() - started < WALK_TIMEOUT do
+        -- The cycle is no longer current: never issue movement again.
+        if myCycle ~= RETURN_CYCLE_ID then
+            stopCharacter(root, humanoid)
+            return RETURN_COMPLETE
+        end
+
+        if RETURN_COMPLETE then
+            stopCharacter(root, humanoid)
+            return true
+        end
+
+        if not AUTO then
+            stopCharacter(root, humanoid)
+            WALKING_HOME = false
+            return false
+        end
+
         if not root.Parent or humanoid.Health <= 0 then
             WALKING_HOME = false
             return false
         end
 
-        local distance = (root.Position - destination).Magnitude
-
-        if distance <= ARRIVE_DISTANCE then
-            -- Exact behavior from the last working ONE-CYCLE build:
-            -- stop total and turn Auto Pickup OFF so it cannot loop.
-            stopCharacter(root, humanoid)
-            AUTO = false
-            WALKING_HOME = false
-            RETURN_COMPLETE = true
-            RETURN_CYCLE_ID += 1
-
-            if autoButton then
-                autoButton.Text = "AUTO PICKUP : OFF"
-            end
-            if status then
-                status.Text = "✓ Arrived / Auto Pickup stopped"
-            end
-            if UnifiedAutoSync then
-                UnifiedAutoSync(false, "STATUS: ARRIVED / AUTO PICKUP STOPPED")
+                if os.clock() - lastMove >= 0.75 then
+            -- Re-check cycle immediately before MoveTo.
+            if myCycle ~= RETURN_CYCLE_ID or RETURN_COMPLETE then
+                stopCharacter(root, humanoid)
+                return RETURN_COMPLETE
             end
 
-            print("[RETURN] Arrived at position #" .. tostring(destinationIndex)
-                .. " |", math.floor(distance * 10) / 10, "studs")
-            print("[RETURN] ONE-CYCLE COMPLETE / AUTO PICKUP OFF")
-            return true
-        end
-
-        if os.clock() - lastMove >= 1 then
             humanoid:MoveTo(destination)
             lastMove = os.clock()
         end
 
-        task.wait(0.10)
+        task.wait(0.05)
+    end
+
+    -- Timeout invalidates this cycle too.
+    if myCycle == RETURN_CYCLE_ID then
+        RETURN_CYCLE_ID += 1
     end
 
     stopCharacter(root, humanoid)
     WALKING_HOME = false
-
-    if not AUTO then
-        print("[RETURN] Cancelled")
-    else
-        warn("[RETURN] Walk timeout")
-    end
-
+    warn("[RETURN] Walk timeout")
     return false
 end
 
@@ -1714,12 +1718,6 @@ Logo.InputBegan:Connect(function(input)
         Close.Visible=true
     end
 end)
-
-UnifiedAutoSync = function(on, message)
-    AutoToggle.Text = on and "ON" or "OFF"
-    AutoToggle.BackgroundColor3 = on and Color3.fromRGB(159,37,238) or Color3.fromRGB(48,46,59)
-    Status.Text = message or (on and "STATUS: AUTO PICKUP ON" or "STATUS: AUTO PICKUP OFF")
-end
 
 AutoToggle.MouseButton1Click:Connect(function()
     AUTO=not AUTO
