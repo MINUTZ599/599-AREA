@@ -59,39 +59,50 @@ local function renderNotif(v)
 end
 sw.MouseButton1Click:Connect(function() renderNotif(not notif) end)
 
--- Anti AFK toggle (default ON on every 599 AREA execute)
+-- Anti AFK toggle - Ouroboros pulse system, default ON every execute
 txt(general,"ANTI AFK",UDim2.fromOffset(16,101),UDim2.new(1,-120,0,20),11,WHITE,true)
 txt(general,"Prevents idle disconnect while enabled",UDim2.fromOffset(16,121),UDim2.new(1,-120,0,18),8,MUTED,false)
 local afkSw=Instance.new("TextButton");afkSw.Size=UDim2.fromOffset(72,32);afkSw.Position=UDim2.new(1,-90,0,103);afkSw.BackgroundColor3=Color3.fromRGB(89,26,173);afkSw.Text="";afkSw.AutoButtonColor=false;afkSw.Parent=general;Instance.new("UICorner",afkSw).CornerRadius=UDim.new(1,0)
 local afkStroke=Instance.new("UIStroke",afkSw);afkStroke.Color=PURPLE2;afkStroke.Thickness=2
 local afkKnob=Instance.new("Frame");afkKnob.Size=UDim2.fromOffset(24,24);afkKnob.Position=UDim2.fromOffset(44,4);afkKnob.BackgroundColor3=Color3.fromRGB(250,240,255);afkKnob.BorderSizePixel=0;afkKnob.Parent=afkSw;Instance.new("UICorner",afkKnob).CornerRadius=UDim.new(1,0)
 
+-- stop an older 599 Anti AFK worker/connection when this module is executed again
+getgenv().AREA599_AntiAFKWorkerId=(getgenv().AREA599_AntiAFKWorkerId or 0)+1
+local antiAfkWorkerId=getgenv().AREA599_AntiAFKWorkerId
 if getgenv().AREA599_AntiAFKConnection then
  pcall(function() getgenv().AREA599_AntiAFKConnection:Disconnect() end)
  getgenv().AREA599_AntiAFKConnection=nil
 end
+
 getgenv().AREA599_AntiAFK=true
 local antiAfk=true
+local antiAfkLastPulse=tick()
 local function renderAntiAfk(v)
  antiAfk=v;getgenv().AREA599_AntiAFK=v
  TweenService:Create(afkKnob,TweenInfo.new(.16),{Position=v and UDim2.fromOffset(44,4) or UDim2.fromOffset(4,4),BackgroundColor3=v and Color3.fromRGB(250,240,255) or Color3.fromRGB(150,150,178)}):Play()
  TweenService:Create(afkSw,TweenInfo.new(.16),{BackgroundColor3=v and Color3.fromRGB(89,26,173) or Color3.fromRGB(15,15,29)}):Play()
  afkStroke.Color=v and PURPLE2 or Color3.fromRGB(80,75,110);afkStroke.Thickness=v and 2 or 1.3
+ if v then antiAfkLastPulse=tick() end
 end
-getgenv().AREA599_AntiAFKConnection=lp.Idled:Connect(function(idleTime)
- if not getgenv().AREA599_AntiAFK then return end
+
+local function antiAfkTap()
  local camera=workspace.CurrentCamera
- pcall(function() VirtualUser:CaptureController() end)
- pcall(function()
-  VirtualUser:ClickButton2(Vector2.new(0,0),camera and camera.CFrame or CFrame.new())
- end)
- pcall(function()
-  VirtualUser:Button2Down(Vector2.new(0,0),camera and camera.CFrame or CFrame.new())
-  task.wait(1)
-  VirtualUser:Button2Up(Vector2.new(0,0),camera and camera.CFrame or CFrame.new())
- end)
- print("[599 AREA] Anti AFK V2 triggered | Idle:",idleTime)
+ if not camera then return end
+ VirtualUser:CaptureController()
+ VirtualUser:ClickButton2(Vector2.new(0,0),camera.CFrame)
+ antiAfkLastPulse=tick()
+ print("[599 AREA] Anti AFK Ouroboros pulse")
+end
+
+task.spawn(function()
+ while getgenv().AREA599_AntiAFKWorkerId==antiAfkWorkerId do
+  task.wait(2)
+  if getgenv().AREA599_AntiAFK and tick()-antiAfkLastPulse>=60 then
+   pcall(antiAfkTap)
+  end
+ end
 end)
+
 afkSw.MouseButton1Click:Connect(function() renderAntiAfk(not antiAfk) end)
 renderAntiAfk(true)
 
@@ -142,4 +153,4 @@ strong.MouseButton1Click:Connect(function() root.BackgroundTransparency=0 end)
 medium.MouseButton1Click:Connect(function() root.BackgroundTransparency=.08 end)
 soft.MouseButton1Click:Connect(function() root.BackgroundTransparency=.16 end)
 
-print("[599 V29] SETTINGS migrated + Anti AFK V2 ON")
+print("[599 V29] SETTINGS migrated + Ouroboros Anti AFK ON")
