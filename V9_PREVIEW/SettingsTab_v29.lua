@@ -125,7 +125,7 @@ bar.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseB
 UIS.InputChanged:Connect(function(i) if dragging and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then setScale(i.Position.X) end end)
 UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then dragging=false end end)
 txt(scaleCard,"60%",UDim2.fromOffset(16,104),UDim2.fromOffset(60,18),8,MUTED,false)
-local mx=txt(scaleCard,"120%",UDim2.new(1,-76,0,104),UDim2.fromOffset(60,18),UDim2.fromOffset(60,18).Y.Offset,MUTED,false);mx.TextXAlignment=Enum.TextXAlignment.Right
+local mx=txt(scaleCard,"120%",UDim2.new(1,-76,0,104),UDim2.fromOffset(60,18),8,MUTED,false);mx.TextXAlignment=Enum.TextXAlignment.Right
 
 -- APPEARANCE
 local appearance=card(UDim2.fromOffset(20,360),UDim2.new(1,-40,0,160))
