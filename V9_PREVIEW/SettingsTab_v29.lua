@@ -3,6 +3,7 @@
 local Players=game:GetService("Players")
 local TweenService=game:GetService("TweenService")
 local Lighting=game:GetService("Lighting")
+local VirtualUser=game:GetService("VirtualUser")
 local lp=Players.LocalPlayer
 local pg=lp:WaitForChild("PlayerGui")
 local gui=pg:WaitForChild("AREA599_V9_PREVIEW",10)
@@ -58,7 +59,39 @@ local function renderNotif(v)
 end
 sw.MouseButton1Click:Connect(function() renderNotif(not notif) end)
 
-local reset=button(general,"RESET ALL FEATURES",UDim2.fromOffset(16,118),UDim2.new(1,-32,0,48))
+-- Anti AFK toggle (default ON on every 599 AREA execute)
+txt(general,"ANTI AFK",UDim2.fromOffset(16,101),UDim2.new(1,-120,0,20),11,WHITE,true)
+txt(general,"Prevents idle disconnect while enabled",UDim2.fromOffset(16,121),UDim2.new(1,-120,0,18),8,MUTED,false)
+local afkSw=Instance.new("TextButton");afkSw.Size=UDim2.fromOffset(72,32);afkSw.Position=UDim2.new(1,-90,0,103);afkSw.BackgroundColor3=Color3.fromRGB(89,26,173);afkSw.Text="";afkSw.AutoButtonColor=false;afkSw.Parent=general;Instance.new("UICorner",afkSw).CornerRadius=UDim.new(1,0)
+local afkStroke=Instance.new("UIStroke",afkSw);afkStroke.Color=PURPLE2;afkStroke.Thickness=2
+local afkKnob=Instance.new("Frame");afkKnob.Size=UDim2.fromOffset(24,24);afkKnob.Position=UDim2.fromOffset(44,4);afkKnob.BackgroundColor3=Color3.fromRGB(250,240,255);afkKnob.BorderSizePixel=0;afkKnob.Parent=afkSw;Instance.new("UICorner",afkKnob).CornerRadius=UDim.new(1,0)
+
+if getgenv().AREA599_AntiAFKConnection then
+ pcall(function() getgenv().AREA599_AntiAFKConnection:Disconnect() end)
+ getgenv().AREA599_AntiAFKConnection=nil
+end
+getgenv().AREA599_AntiAFK=true
+local antiAfk=true
+local function renderAntiAfk(v)
+ antiAfk=v;getgenv().AREA599_AntiAFK=v
+ TweenService:Create(afkKnob,TweenInfo.new(.16),{Position=v and UDim2.fromOffset(44,4) or UDim2.fromOffset(4,4),BackgroundColor3=v and Color3.fromRGB(250,240,255) or Color3.fromRGB(150,150,178)}):Play()
+ TweenService:Create(afkSw,TweenInfo.new(.16),{BackgroundColor3=v and Color3.fromRGB(89,26,173) or Color3.fromRGB(15,15,29)}):Play()
+ afkStroke.Color=v and PURPLE2 or Color3.fromRGB(80,75,110);afkStroke.Thickness=v and 2 or 1.3
+end
+getgenv().AREA599_AntiAFKConnection=lp.Idled:Connect(function()
+ if not getgenv().AREA599_AntiAFK then return end
+ pcall(function()
+  VirtualUser:CaptureController()
+  VirtualUser:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+  task.wait(1)
+  VirtualUser:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+ end)
+ print("[599 AREA] Anti AFK triggered")
+end)
+afkSw.MouseButton1Click:Connect(function() renderAntiAfk(not antiAfk) end)
+renderAntiAfk(true)
+
+local reset=button(general,"RESET ALL FEATURES",UDim2.fromOffset(16,153),UDim2.new(1,-32,0,37))
 reset.TextColor3=Color3.fromRGB(255,140,165)
 reset.MouseButton1Click:Connect(function()
  local ch=lp.Character;local hum=ch and ch:FindFirstChildOfClass("Humanoid");local hrp=ch and ch:FindFirstChild("HumanoidRootPart")
@@ -92,7 +125,7 @@ bar.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseB
 UIS.InputChanged:Connect(function(i) if dragging and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then setScale(i.Position.X) end end)
 UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then dragging=false end end)
 txt(scaleCard,"60%",UDim2.fromOffset(16,104),UDim2.fromOffset(60,18),8,MUTED,false)
-local mx=txt(scaleCard,"120%",UDim2.new(1,-76,0,104),UDim2.fromOffset(60,18),8,MUTED,false);mx.TextXAlignment=Enum.TextXAlignment.Right
+local mx=txt(scaleCard,"120%",UDim2.new(1,-76,0,104),UDim2.fromOffset(60,18),UDim2.fromOffset(60,18).Y.Offset,MUTED,false);mx.TextXAlignment=Enum.TextXAlignment.Right
 
 -- APPEARANCE
 local appearance=card(UDim2.fromOffset(20,360),UDim2.new(1,-40,0,160))
@@ -105,4 +138,4 @@ strong.MouseButton1Click:Connect(function() root.BackgroundTransparency=0 end)
 medium.MouseButton1Click:Connect(function() root.BackgroundTransparency=.08 end)
 soft.MouseButton1Click:Connect(function() root.BackgroundTransparency=.16 end)
 
-print("[599 V29] SETTINGS migrated")
+print("[599 V29] SETTINGS migrated + Anti AFK ON")
