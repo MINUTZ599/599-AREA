@@ -74,6 +74,9 @@ print("[V4 WALKBACK] EggData loaded")
 
 local AUTO = false
 
+-- Independent Settings toggle: only unequip held egg after own Baseplate is reached.
+local AUTO_UNEQUIP_EGG = false
+
 local BUSY = false
 
 local WALKING_HOME = false
@@ -335,6 +338,12 @@ local function forceStopOnBaseplate()
             stopCharacter(root, humanoid)
         end
         RunService.Heartbeat:Wait()
+    end
+
+    -- Optional Settings action: only after own Baseplate is reached.
+    if AUTO_UNEQUIP_EGG and humanoid and humanoid.Parent then
+        humanoid:UnequipTools()
+        print("[599 SETTINGS] Auto Unequip Egg: released at Baseplate")
     end
 
     if autoButton then
@@ -1526,6 +1535,8 @@ local MainPage=Instance.new("Frame")
 MainPage.Size=UDim2.fromScale(1,1); MainPage.BackgroundTransparency=1; MainPage.Parent=Content
 local EspPage=Instance.new("Frame")
 EspPage.Size=UDim2.fromScale(1,1); EspPage.BackgroundTransparency=1; EspPage.Visible=false; EspPage.Parent=Content
+local SettingsPage=Instance.new("Frame")
+SettingsPage.Size=UDim2.fromScale(1,1); SettingsPage.BackgroundTransparency=1; SettingsPage.Visible=false; SettingsPage.Parent=Content
 
 local function heading(parent,text)
     local l=Instance.new("TextLabel")
@@ -1613,6 +1624,9 @@ local AutoToggle=toggleRow(MainPage,48,"Automatic Egg Pickup")
 filterTitle(MainPage,"RARITY FILTER (AUTO PICKUP)",112)
 checkboxGrid(MainPage,140,EnabledRarities)
 
+heading(SettingsPage,"SETTINGS")
+local AutoUnequipToggle=toggleRow(SettingsPage,48,"Auto Unequip Egg at Base")
+
 heading(EspPage,"EGG ESP V5.4")
 local EspToggle=toggleRow(EspPage,48,"World Egg ESP")
 filterTitle(EspPage,"RARITY FILTER (EGG ESP)",112)
@@ -1644,13 +1658,16 @@ Status.TextColor3=Color3.fromRGB(137,126,151); Status.TextXAlignment=Enum.TextXA
 
 local function selectPage(page)
     local main=page=="MAIN"
-    MainPage.Visible=main; EspPage.Visible=not main
+    local esp=page=="ESP"
+    local settings=page=="SETTINGS"
+    MainPage.Visible=main; EspPage.Visible=esp; SettingsPage.Visible=settings
     MainNav.BackgroundColor3=main and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
-    EspNav.BackgroundColor3=not main and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
+    EspNav.BackgroundColor3=esp and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
+    SettingsNav.BackgroundColor3=settings and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
 end
 MainNav.MouseButton1Click:Connect(function() selectPage("MAIN") end)
 EspNav.MouseButton1Click:Connect(function() selectPage("ESP") end)
-SettingsNav.MouseButton1Click:Connect(function() Status.Text="SETTINGS: COMING SOON" end)
+SettingsNav.MouseButton1Click:Connect(function() selectPage("SETTINGS") end)
 selectPage("MAIN")
 
 local dragging,dragStart,startPos
@@ -1731,6 +1748,13 @@ AutoToggle.MouseButton1Click:Connect(function()
         ACTIVE_RETURN_POSITION=nil; ACTIVE_RETURN_INDEX=nil
         local _,root,humanoid=getCharacter(); stopCharacter(root,humanoid)
     end
+end)
+
+AutoUnequipToggle.MouseButton1Click:Connect(function()
+    AUTO_UNEQUIP_EGG=not AUTO_UNEQUIP_EGG
+    AutoUnequipToggle.Text=AUTO_UNEQUIP_EGG and "ON" or "OFF"
+    AutoUnequipToggle.BackgroundColor3=AUTO_UNEQUIP_EGG and Color3.fromRGB(159,37,238) or Color3.fromRGB(48,46,59)
+    Status.Text=AUTO_UNEQUIP_EGG and "STATUS: AUTO UNEQUIP EGG ON" or "STATUS: AUTO UNEQUIP EGG OFF"
 end)
 
 getgenv()._599_UNIFIED_ESP_ENABLED=false
