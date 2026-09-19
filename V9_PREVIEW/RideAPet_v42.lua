@@ -1680,9 +1680,9 @@ local foodFilterCorner=Instance.new("UICorner"); foodFilterCorner.CornerRadius=U
 local function refreshFeedFoodChecks()
     for name,data in pairs(FeedFoodChecks) do
         local selected=name==FeedSelectedFood
-        data.box.BackgroundColor3=selected and Color3.fromRGB(92,27,151) or Color3.fromRGB(22,21,34)
-        data.mark.Text=selected and "✓" or ""
-        data.mark.TextColor3=Color3.fromRGB(220,170,255)
+        data.mark.Visible=selected
+        data.box.BackgroundColor3=selected and Color3.fromRGB(170,35,255) or Color3.fromRGB(31,28,42)
+        data.stroke.Color=selected and Color3.fromRGB(218,91,255) or Color3.fromRGB(112,77,140)
     end
 end
 
@@ -1701,8 +1701,9 @@ for i,foodName in ipairs(FeedFoods) do
     local bs=Instance.new("UIStroke"); bs.Color=Color3.fromRGB(128,76,155); bs.Thickness=1; bs.Parent=box
 
     local mark=Instance.new("TextLabel")
-    mark.Size=UDim2.fromScale(1,1); mark.BackgroundTransparency=1; mark.Text=""
-    mark.Font=Enum.Font.GothamBold; mark.TextSize=13; mark.TextColor3=Color3.fromRGB(220,170,255); mark.Parent=box
+    mark.Size=UDim2.fromScale(1,1); mark.BackgroundTransparency=1; mark.Text="✓"
+    mark.Font=Enum.Font.GothamBold; mark.TextSize=13; mark.TextColor3=Color3.new(1,1,1)
+    mark.Visible=false; mark.Parent=box
 
     local label=Instance.new("TextLabel")
     label.Position=UDim2.fromOffset(25,0); label.Size=UDim2.new(1,-25,1,0)
@@ -1710,13 +1711,14 @@ for i,foodName in ipairs(FeedFoods) do
     label.TextSize=10; label.TextColor3=Color3.fromRGB(210,204,218)
     label.TextXAlignment=Enum.TextXAlignment.Left; label.Parent=holder
 
-    FeedFoodChecks[foodName]={box=box,mark=mark}
+    FeedFoodChecks[foodName]={box=box,mark=mark,stroke=bs}
     holder.MouseButton1Click:Connect(function()
         FeedSelectedFood=foodName
         refreshFeedFoodChecks()
         FeedStatus.Text="FOOD: "..foodName
     end)
 end
+FeedSelectedFood=nil
 refreshFeedFoodChecks()
 
 local AmountLabel=Instance.new("TextLabel")
