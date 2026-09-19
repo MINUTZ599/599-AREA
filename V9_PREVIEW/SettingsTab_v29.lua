@@ -77,6 +77,7 @@ end
 getgenv().AREA599_AntiAFK=true
 local antiAfk=true
 local antiAfkLastPulse=tick()
+local antiAfkPulseFlip=false
 local function renderAntiAfk(v)
  antiAfk=v;getgenv().AREA599_AntiAFK=v
  TweenService:Create(afkKnob,TweenInfo.new(.16),{Position=v and UDim2.fromOffset(44,4) or UDim2.fromOffset(4,4),BackgroundColor3=v and Color3.fromRGB(250,240,255) or Color3.fromRGB(150,150,178)}):Play()
@@ -85,28 +86,48 @@ local function renderAntiAfk(v)
  if v then antiAfkLastPulse=tick() end
 end
 
+-- Stronger Anti AFK pulse: alternate harmless virtual input instead of relying
+-- on one fixed right-click pattern every time.
 local function antiAfkTap()
  local camera=workspace.CurrentCamera
- if not camera then return end
+ if not camera then error("CurrentCamera unavailable") end
+ antiAfkPulseFlip=not antiAfkPulseFlip
  VirtualUser:CaptureController()
- VirtualUser:ClickButton2(Vector2.new(0,0),camera.CFrame)
+ if antiAfkPulseFlip then
+  VirtualUser:Button1Down(Vector2.new(1,1),camera.CFrame)
+  task.wait(.08)
+  VirtualUser:Button1Up(Vector2.new(1,1),camera.CFrame)
+ else
+  VirtualUser:Button2Down(Vector2.new(1,1),camera.CFrame)
+  task.wait(.08)
+  VirtualUser:Button2Up(Vector2.new(1,1),camera.CFrame)
+ end
  antiAfkLastPulse=tick()
- print("[599 AREA] Anti AFK Ouroboros pulse")
+ print("[599 AREA] Anti AFK strong pulse",antiAfkPulseFlip and "L" or "R")
 end
 
+-- Pulse periodically while ON; Idled also triggers an immediate recovery pulse.
 task.spawn(function()
  while getgenv().AREA599_AntiAFKWorkerId==antiAfkWorkerId do
   task.wait(2)
-  if getgenv().AREA599_AntiAFK and tick()-antiAfkLastPulse>=60 then
-   pcall(antiAfkTap)
+  if getgenv().AREA599_AntiAFK and tick()-antiAfkLastPulse>=45 then
+   local ok,err=pcall(antiAfkTap)
+   if not ok then warn("[599 AREA] Anti AFK periodic pulse failed:",err) end
   end
+ end
+end)
+
+getgenv().AREA599_AntiAFKConnection=lp.Idled:Connect(function()
+ if getgenv().AREA599_AntiAFK then
+  local ok,err=pcall(antiAfkTap)
+  if not ok then warn("[599 AREA] Anti AFK Idled pulse failed:",err) end
  end
 end)
 
 afkSw.MouseButton1Click:Connect(function() renderAntiAfk(not antiAfk) end)
 renderAntiAfk(true)
 
--- Temporary manual test: fires the exact same pulse used by the Anti AFK worker.
+-- Temporary manual test: fires the exact same pulse used by Anti AFK.
 local testAfk=button(general,"TEST ANTI AFK",UDim2.fromOffset(16,145),UDim2.new(.5,-20,0,45))
 testAfk.TextColor3=Color3.fromRGB(220,170,255)
 testAfk.MouseButton1Click:Connect(function()
