@@ -1662,7 +1662,7 @@ local FeedSelectedUUID=nil
 local FeedSelectedName=nil
 local FeedRunning=false
 local FeedRunId=0
-local FeedSelectedFood="Bone"
+local FeedSelectedFood=nil
 local FeedFoods={"Grass","Bone","Meat","Magic Apple","Dragonfruit"}
 local FeedFoodChecks={}
 
@@ -1788,6 +1788,7 @@ FeedStart.MouseButton1Click:Connect(function()
     end
 
     local food=FeedSelectedFood
+    if not food then FeedStatus.Text="SELECT FOOD FIRST"; return end
     local amount=tonumber(FeedAmountBox.Text)
     if not amount or amount<1 then FeedStatus.Text="INVALID AMOUNT"; return end
     amount=math.floor(amount)
