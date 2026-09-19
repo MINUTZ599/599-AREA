@@ -218,7 +218,7 @@ run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/Player
 run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/PlayerTrackerBridge_v26.lua?clean=41j-global1",55)
 run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/WorldTab_v27.lua?clean=41k-global1",61)
 run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/AnimeDicePatch_v28.lua?clean=41l-delayfix1-global1",67)
-run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/SettingsTab_v29.lua?clean=41m-global1",72)
+run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/SettingsTab_v29.lua?clean=41m-antiafk-20260919-1",72)
 run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/FreecamMain_v30.lua?clean=41n-camerafix1-global1",78)
 run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/PageOverlapFix_v31.lua?clean=41o-global1",83)
 run("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/NoclipSpectateResponsive_v33.lua?clean=41p-global1",88)
