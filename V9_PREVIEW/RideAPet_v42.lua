@@ -1645,8 +1645,7 @@ filterTitle(MainPage,"RARITY FILTER (AUTO PICKUP)",112)
 checkboxGrid(MainPage,140,EnabledRarities)
 
 --============================================================
--- AUTO FEED (confirmed Ride A Pet mechanism)
--- Click pet -> PetKey -> PetCollect -> 1.4s -> FeedPet loop 0.75s
+-- AUTO FEED - integrated from the confirmed standalone V3
 --============================================================
 heading(AutoFeedPage,"AUTO FEED")
 
@@ -1663,52 +1662,79 @@ local FeedSelectedUUID=nil
 local FeedSelectedName=nil
 local FeedRunning=false
 local FeedRunId=0
+local FeedSelectedFood="Bone"
+local FeedFoods={"Grass","Bone","Meat","Magic Apple","Dragonfruit"}
 
 local FeedSelectedLabel=Instance.new("TextLabel")
-FeedSelectedLabel.Position=UDim2.fromOffset(16,48); FeedSelectedLabel.Size=UDim2.new(1,-32,0,48)
+FeedSelectedLabel.Position=UDim2.fromOffset(16,48); FeedSelectedLabel.Size=UDim2.new(1,-32,0,44)
 FeedSelectedLabel.BackgroundColor3=Color3.fromRGB(19,19,30); FeedSelectedLabel.BorderSizePixel=0
 FeedSelectedLabel.Text="Selected: NONE  |  Click a pet"; FeedSelectedLabel.TextWrapped=true
 FeedSelectedLabel.Font=Enum.Font.GothamSemibold; FeedSelectedLabel.TextSize=12
 FeedSelectedLabel.TextColor3=Color3.fromRGB(255,190,90); FeedSelectedLabel.Parent=AutoFeedPage
 local feedSelectedCorner=Instance.new("UICorner"); feedSelectedCorner.CornerRadius=UDim.new(0,10); feedSelectedCorner.Parent=FeedSelectedLabel
 
-local function feedInputLabel(text,y)
-    local l=Instance.new("TextLabel")
-    l.Position=UDim2.fromOffset(18,y); l.Size=UDim2.new(1,-36,0,18)
-    l.BackgroundTransparency=1; l.Text=text; l.Font=Enum.Font.GothamSemibold; l.TextSize=11
-    l.TextColor3=Color3.fromRGB(190,57,255); l.TextXAlignment=Enum.TextXAlignment.Left; l.Parent=AutoFeedPage
+local FoodButton=Instance.new("TextButton")
+FoodButton.Position=UDim2.fromOffset(16,108); FoodButton.Size=UDim2.new(1,-32,0,36)
+FoodButton.BackgroundColor3=Color3.fromRGB(19,19,30); FoodButton.BorderSizePixel=0
+FoodButton.Text="Food: Bone  ▼"; FoodButton.Font=Enum.Font.GothamSemibold; FoodButton.TextSize=12
+FoodButton.TextColor3=Color3.fromRGB(242,240,247); FoodButton.Parent=AutoFeedPage
+local foodButtonCorner=Instance.new("UICorner"); foodButtonCorner.CornerRadius=UDim.new(0,9); foodButtonCorner.Parent=FoodButton
+
+local FoodDrop=Instance.new("Frame")
+FoodDrop.Position=UDim2.fromOffset(16,146); FoodDrop.Size=UDim2.new(1,-32,0,0)
+FoodDrop.BackgroundColor3=Color3.fromRGB(15,15,25); FoodDrop.BorderSizePixel=0
+FoodDrop.ClipsDescendants=true; FoodDrop.Visible=false; FoodDrop.ZIndex=20; FoodDrop.Parent=AutoFeedPage
+local foodDropCorner=Instance.new("UICorner"); foodDropCorner.CornerRadius=UDim.new(0,9); foodDropCorner.Parent=FoodDrop
+local foodLayout=Instance.new("UIListLayout"); foodLayout.Parent=FoodDrop
+
+for _,foodName in ipairs(FeedFoods) do
+    local option=Instance.new("TextButton")
+    option.Size=UDim2.new(1,0,0,28); option.BackgroundColor3=Color3.fromRGB(20,19,31)
+    option.BorderSizePixel=0; option.Text=foodName; option.Font=Enum.Font.Gotham
+    option.TextSize=11; option.TextColor3=Color3.fromRGB(238,234,244); option.ZIndex=21; option.Parent=FoodDrop
+    option.MouseButton1Click:Connect(function()
+        FeedSelectedFood=foodName
+        FoodButton.Text="Food: "..foodName.."  ▼"
+        FoodDrop.Visible=false
+        FoodDrop.Size=UDim2.new(1,-32,0,0)
+    end)
 end
 
-local function feedInput(y,placeholder,defaultText)
-    local b=Instance.new("TextBox")
-    b.Position=UDim2.fromOffset(16,y); b.Size=UDim2.new(1,-32,0,36)
-    b.BackgroundColor3=Color3.fromRGB(19,19,30); b.BorderSizePixel=0
-    b.PlaceholderText=placeholder; b.Text=defaultText; b.ClearTextOnFocus=false
-    b.Font=Enum.Font.Gotham; b.TextSize=12; b.TextColor3=Color3.fromRGB(242,240,247)
-    b.PlaceholderColor3=Color3.fromRGB(125,115,138); b.Parent=AutoFeedPage
-    local c=Instance.new("UICorner"); c.CornerRadius=UDim.new(0,9); c.Parent=b
-    return b
-end
+FoodButton.MouseButton1Click:Connect(function()
+    local open=not FoodDrop.Visible
+    FoodDrop.Visible=open
+    FoodDrop.Size=open and UDim2.new(1,-32,0,#FeedFoods*28) or UDim2.new(1,-32,0,0)
+    FoodButton.Text="Food: "..FeedSelectedFood..(open and "  ▲" or "  ▼")
+end)
 
-feedInputLabel("FOOD NAME",108)
-local FeedFoodBox=feedInput(128,"Example: Bone","Bone")
-feedInputLabel("AMOUNT",174)
-local FeedAmountBox=feedInput(194,"Example: 200","5")
+local AmountLabel=Instance.new("TextLabel")
+AmountLabel.Position=UDim2.fromOffset(18,160); AmountLabel.Size=UDim2.new(1,-36,0,18)
+AmountLabel.BackgroundTransparency=1; AmountLabel.Text="AMOUNT"; AmountLabel.Font=Enum.Font.GothamSemibold
+AmountLabel.TextSize=11; AmountLabel.TextColor3=Color3.fromRGB(190,57,255)
+AmountLabel.TextXAlignment=Enum.TextXAlignment.Left; AmountLabel.Parent=AutoFeedPage
+
+local FeedAmountBox=Instance.new("TextBox")
+FeedAmountBox.Position=UDim2.fromOffset(16,181); FeedAmountBox.Size=UDim2.new(1,-32,0,36)
+FeedAmountBox.BackgroundColor3=Color3.fromRGB(19,19,30); FeedAmountBox.BorderSizePixel=0
+FeedAmountBox.PlaceholderText="Example: 200"; FeedAmountBox.Text="5"; FeedAmountBox.ClearTextOnFocus=false
+FeedAmountBox.Font=Enum.Font.Gotham; FeedAmountBox.TextSize=12; FeedAmountBox.TextColor3=Color3.fromRGB(242,240,247)
+FeedAmountBox.PlaceholderColor3=Color3.fromRGB(125,115,138); FeedAmountBox.Parent=AutoFeedPage
+local feedAmountCorner=Instance.new("UICorner"); feedAmountCorner.CornerRadius=UDim.new(0,9); feedAmountCorner.Parent=FeedAmountBox
 
 local FeedStatus=Instance.new("TextLabel")
-FeedStatus.Position=UDim2.fromOffset(16,240); FeedStatus.Size=UDim2.new(1,-32,0,24)
+FeedStatus.Position=UDim2.fromOffset(16,229); FeedStatus.Size=UDim2.new(1,-32,0,24)
 FeedStatus.BackgroundTransparency=1; FeedStatus.Text="READY"; FeedStatus.Font=Enum.Font.GothamBold
 FeedStatus.TextSize=11; FeedStatus.TextColor3=Color3.fromRGB(180,169,194); FeedStatus.Parent=AutoFeedPage
 
 local FeedStart=Instance.new("TextButton")
-FeedStart.Position=UDim2.fromOffset(16,278); FeedStart.Size=UDim2.new(.5,-20,0,42)
+FeedStart.Position=UDim2.fromOffset(16,267); FeedStart.Size=UDim2.new(.5,-20,0,42)
 FeedStart.BackgroundColor3=Color3.fromRGB(145,45,220); FeedStart.BorderSizePixel=0
 FeedStart.Text="START"; FeedStart.Font=Enum.Font.GothamBold; FeedStart.TextSize=12
 FeedStart.TextColor3=Color3.new(1,1,1); FeedStart.Parent=AutoFeedPage
 local feedStartCorner=Instance.new("UICorner"); feedStartCorner.CornerRadius=UDim.new(0,9); feedStartCorner.Parent=FeedStart
 
 local FeedStop=Instance.new("TextButton")
-FeedStop.Position=UDim2.new(.5,4,0,278); FeedStop.Size=UDim2.new(.5,-20,0,42)
+FeedStop.Position=UDim2.new(.5,4,0,267); FeedStop.Size=UDim2.new(.5,-20,0,42)
 FeedStop.BackgroundColor3=Color3.fromRGB(48,46,59); FeedStop.BorderSizePixel=0
 FeedStop.Text="STOP"; FeedStop.Font=Enum.Font.GothamBold; FeedStop.TextSize=12
 FeedStop.TextColor3=Color3.new(1,1,1); FeedStop.Parent=AutoFeedPage
@@ -1725,16 +1751,22 @@ local function findFeedPet(target)
     return nil,nil
 end
 
-FeedUIS.InputBegan:Connect(function(input)
+-- Match the working standalone: select directly from Mouse.Target on the click.
+FeedUIS.InputBegan:Connect(function(input,gameProcessed)
     if input.UserInputType~=Enum.UserInputType.MouseButton1 or FeedRunning then return end
-    local pet,key=findFeedPet(FeedMouse.Target)
+    local target=FeedMouse.Target
+    if not target then return end
+    local pet,key=findFeedPet(target)
     if not pet or not key then return end
+
     FeedSelectedPet=pet
     FeedSelectedUUID=key
     FeedSelectedName=pet:GetAttribute("PetName") or pet.Name or "Pet"
     FeedSelectedLabel.Text="Selected: "..tostring(FeedSelectedName)
     FeedSelectedLabel.TextColor3=Color3.fromRGB(120,255,150)
     FeedStatus.Text="PET SELECTED"
+    print("[599 AUTO FEED] PET:",FeedSelectedName)
+    print("[599 AUTO FEED] UUID:",FeedSelectedUUID)
 end)
 
 FeedStart.MouseButton1Click:Connect(function()
@@ -1743,9 +1775,8 @@ FeedStart.MouseButton1Click:Connect(function()
         FeedStatus.Text="SELECT PET FIRST"; return
     end
 
-    local food=FeedFoodBox.Text
+    local food=FeedSelectedFood
     local amount=tonumber(FeedAmountBox.Text)
-    if food=="" then FeedStatus.Text="INVALID FOOD"; return end
     if not amount or amount<1 then FeedStatus.Text="INVALID AMOUNT"; return end
     amount=math.floor(amount)
 
@@ -1759,6 +1790,7 @@ FeedStart.MouseButton1Click:Connect(function()
 
     task.spawn(function()
         FeedStatus.Text="PREPARING "..tostring(targetName)
+        print("[599 AUTO FEED] PetCollect:",targetUUID)
         PetCollectRemote:FireServer(targetUUID)
 
         local waited=0
@@ -1776,7 +1808,8 @@ FeedStart.MouseButton1Click:Connect(function()
 
             FeedPetRemote:FireServer(targetUUID,food)
             sent+=1
-            FeedStatus.Text=tostring(targetName).."  |  "..tostring(sent).." / "..tostring(amount)
+            FeedStatus.Text=tostring(targetName).." | "..food.." | "..tostring(sent).." / "..tostring(amount)
+            print("[599 AUTO FEED]",sent,"/",amount,food)
 
             if i<amount then
                 local feedWait=0
@@ -1791,7 +1824,7 @@ FeedStart.MouseButton1Click:Connect(function()
         local completed=sent>=amount
         FeedRunning=false
         FeedStart.Text="START"
-        FeedStatus.Text=completed and ("DONE  |  "..tostring(sent).." "..food) or ("STOPPED  |  "..tostring(sent).." / "..tostring(amount))
+        FeedStatus.Text=completed and ("DONE | "..tostring(sent).." "..food) or ("STOPPED | "..tostring(sent).." / "..tostring(amount))
     end)
 end)
 
