@@ -1538,7 +1538,8 @@ end
 -- Requested custom icons only; navigation/feature logic is unchanged.
 local MainNav=navButton(12,"","Main",104857036411942)
 local EspNav=navButton(70,"","Egg ESP",122991701514648)
-local SettingsNav=navButton(128,"⚙","Settings")
+local AutoFeedNav=navButton(128,"","Auto Feed",75276966253398)
+local SettingsNav=navButton(186,"⚙","Settings")
 SettingsNav.AutoButtonColor=false
 
 local Motto=Instance.new("TextLabel")
@@ -1552,6 +1553,8 @@ local MainPage=Instance.new("Frame")
 MainPage.Size=UDim2.fromScale(1,1); MainPage.BackgroundTransparency=1; MainPage.Parent=Content
 local EspPage=Instance.new("Frame")
 EspPage.Size=UDim2.fromScale(1,1); EspPage.BackgroundTransparency=1; EspPage.Visible=false; EspPage.Parent=Content
+local AutoFeedPage=Instance.new("Frame")
+AutoFeedPage.Size=UDim2.fromScale(1,1); AutoFeedPage.BackgroundTransparency=1; AutoFeedPage.Visible=false; AutoFeedPage.Parent=Content
 local SettingsPage=Instance.new("Frame")
 SettingsPage.Size=UDim2.fromScale(1,1); SettingsPage.BackgroundTransparency=1; SettingsPage.Visible=false; SettingsPage.Parent=Content
 
@@ -1641,6 +1644,165 @@ local AutoToggle=toggleRow(MainPage,48,"Automatic Egg Pickup")
 filterTitle(MainPage,"RARITY FILTER (AUTO PICKUP)",112)
 checkboxGrid(MainPage,140,EnabledRarities)
 
+--============================================================
+-- AUTO FEED (confirmed Ride A Pet mechanism)
+-- Click pet -> PetKey -> PetCollect -> 1.4s -> FeedPet loop 0.75s
+--============================================================
+heading(AutoFeedPage,"AUTO FEED")
+
+local FeedRemotes=RS:WaitForChild("Remotes"):WaitForChild("Game")
+local PetCollectRemote=FeedRemotes:WaitForChild("PetCollect")
+local FeedPetRemote=FeedRemotes:WaitForChild("FeedPet")
+local FeedMouse=LP:GetMouse()
+local FeedUIS=game:GetService("UserInputService")
+
+local FEED_COLLECT_DELAY=1.4
+local FEED_LOOP_DELAY=0.75
+local FeedSelectedPet=nil
+local FeedSelectedUUID=nil
+local FeedSelectedName=nil
+local FeedRunning=false
+local FeedRunId=0
+
+local FeedSelectedLabel=Instance.new("TextLabel")
+FeedSelectedLabel.Position=UDim2.fromOffset(16,48); FeedSelectedLabel.Size=UDim2.new(1,-32,0,48)
+FeedSelectedLabel.BackgroundColor3=Color3.fromRGB(19,19,30); FeedSelectedLabel.BorderSizePixel=0
+FeedSelectedLabel.Text="Selected: NONE  |  Click a pet"; FeedSelectedLabel.TextWrapped=true
+FeedSelectedLabel.Font=Enum.Font.GothamSemibold; FeedSelectedLabel.TextSize=12
+FeedSelectedLabel.TextColor3=Color3.fromRGB(255,190,90); FeedSelectedLabel.Parent=AutoFeedPage
+local feedSelectedCorner=Instance.new("UICorner"); feedSelectedCorner.CornerRadius=UDim.new(0,10); feedSelectedCorner.Parent=FeedSelectedLabel
+
+local function feedInputLabel(text,y)
+    local l=Instance.new("TextLabel")
+    l.Position=UDim2.fromOffset(18,y); l.Size=UDim2.new(1,-36,0,18)
+    l.BackgroundTransparency=1; l.Text=text; l.Font=Enum.Font.GothamSemibold; l.TextSize=11
+    l.TextColor3=Color3.fromRGB(190,57,255); l.TextXAlignment=Enum.TextXAlignment.Left; l.Parent=AutoFeedPage
+end
+
+local function feedInput(y,placeholder,defaultText)
+    local b=Instance.new("TextBox")
+    b.Position=UDim2.fromOffset(16,y); b.Size=UDim2.new(1,-32,0,36)
+    b.BackgroundColor3=Color3.fromRGB(19,19,30); b.BorderSizePixel=0
+    b.PlaceholderText=placeholder; b.Text=defaultText; b.ClearTextOnFocus=false
+    b.Font=Enum.Font.Gotham; b.TextSize=12; b.TextColor3=Color3.fromRGB(242,240,247)
+    b.PlaceholderColor3=Color3.fromRGB(125,115,138); b.Parent=AutoFeedPage
+    local c=Instance.new("UICorner"); c.CornerRadius=UDim.new(0,9); c.Parent=b
+    return b
+end
+
+feedInputLabel("FOOD NAME",108)
+local FeedFoodBox=feedInput(128,"Example: Bone","Bone")
+feedInputLabel("AMOUNT",174)
+local FeedAmountBox=feedInput(194,"Example: 200","5")
+
+local FeedStatus=Instance.new("TextLabel")
+FeedStatus.Position=UDim2.fromOffset(16,240); FeedStatus.Size=UDim2.new(1,-32,0,24)
+FeedStatus.BackgroundTransparency=1; FeedStatus.Text="READY"; FeedStatus.Font=Enum.Font.GothamBold
+FeedStatus.TextSize=11; FeedStatus.TextColor3=Color3.fromRGB(180,169,194); FeedStatus.Parent=AutoFeedPage
+
+local FeedStart=Instance.new("TextButton")
+FeedStart.Position=UDim2.fromOffset(16,278); FeedStart.Size=UDim2.new(.5,-20,0,42)
+FeedStart.BackgroundColor3=Color3.fromRGB(145,45,220); FeedStart.BorderSizePixel=0
+FeedStart.Text="START"; FeedStart.Font=Enum.Font.GothamBold; FeedStart.TextSize=12
+FeedStart.TextColor3=Color3.new(1,1,1); FeedStart.Parent=AutoFeedPage
+local feedStartCorner=Instance.new("UICorner"); feedStartCorner.CornerRadius=UDim.new(0,9); feedStartCorner.Parent=FeedStart
+
+local FeedStop=Instance.new("TextButton")
+FeedStop.Position=UDim2.new(.5,4,0,278); FeedStop.Size=UDim2.new(.5,-20,0,42)
+FeedStop.BackgroundColor3=Color3.fromRGB(48,46,59); FeedStop.BorderSizePixel=0
+FeedStop.Text="STOP"; FeedStop.Font=Enum.Font.GothamBold; FeedStop.TextSize=12
+FeedStop.TextColor3=Color3.new(1,1,1); FeedStop.Parent=AutoFeedPage
+local feedStopCorner=Instance.new("UICorner"); feedStopCorner.CornerRadius=UDim.new(0,9); feedStopCorner.Parent=FeedStop
+
+local function findFeedPet(target)
+    local current=target
+    for _=1,15 do
+        if not current then break end
+        local key=current:GetAttribute("PetKey")
+        if typeof(key)=="string" and key~="" then return current,key end
+        current=current.Parent
+    end
+    return nil,nil
+end
+
+FeedUIS.InputBegan:Connect(function(input)
+    if input.UserInputType~=Enum.UserInputType.MouseButton1 or FeedRunning then return end
+    local pet,key=findFeedPet(FeedMouse.Target)
+    if not pet or not key then return end
+    FeedSelectedPet=pet
+    FeedSelectedUUID=key
+    FeedSelectedName=pet:GetAttribute("PetName") or pet.Name or "Pet"
+    FeedSelectedLabel.Text="Selected: "..tostring(FeedSelectedName)
+    FeedSelectedLabel.TextColor3=Color3.fromRGB(120,255,150)
+    FeedStatus.Text="PET SELECTED"
+end)
+
+FeedStart.MouseButton1Click:Connect(function()
+    if FeedRunning then return end
+    if not FeedSelectedPet or not FeedSelectedPet.Parent or not FeedSelectedUUID then
+        FeedStatus.Text="SELECT PET FIRST"; return
+    end
+
+    local food=FeedFoodBox.Text
+    local amount=tonumber(FeedAmountBox.Text)
+    if food=="" then FeedStatus.Text="INVALID FOOD"; return end
+    if not amount or amount<1 then FeedStatus.Text="INVALID AMOUNT"; return end
+    amount=math.floor(amount)
+
+    local targetPet=FeedSelectedPet
+    local targetUUID=FeedSelectedUUID
+    local targetName=FeedSelectedName
+    FeedRunId+=1
+    local thisRun=FeedRunId
+    FeedRunning=true
+    FeedStart.Text="RUNNING..."
+
+    task.spawn(function()
+        FeedStatus.Text="PREPARING "..tostring(targetName)
+        PetCollectRemote:FireServer(targetUUID)
+
+        local waited=0
+        while waited<FEED_COLLECT_DELAY do
+            if not FeedRunning or FeedRunId~=thisRun then
+                FeedStart.Text="START"; FeedStatus.Text="STOPPED"; return
+            end
+            task.wait(.1); waited+=.1
+        end
+
+        local sent=0
+        for i=1,amount do
+            if not FeedRunning or FeedRunId~=thisRun then break end
+            if not targetPet or not targetPet.Parent then FeedStatus.Text="PET NOT FOUND"; break end
+
+            FeedPetRemote:FireServer(targetUUID,food)
+            sent+=1
+            FeedStatus.Text=tostring(targetName).."  |  "..tostring(sent).." / "..tostring(amount)
+
+            if i<amount then
+                local feedWait=0
+                while feedWait<FEED_LOOP_DELAY do
+                    if not FeedRunning or FeedRunId~=thisRun then break end
+                    task.wait(.05); feedWait+=.05
+                end
+            end
+        end
+
+        if FeedRunId~=thisRun then return end
+        local completed=sent>=amount
+        FeedRunning=false
+        FeedStart.Text="START"
+        FeedStatus.Text=completed and ("DONE  |  "..tostring(sent).." "..food) or ("STOPPED  |  "..tostring(sent).." / "..tostring(amount))
+    end)
+end)
+
+FeedStop.MouseButton1Click:Connect(function()
+    if FeedRunning then
+        FeedRunning=false; FeedRunId+=1; FeedStart.Text="START"; FeedStatus.Text="STOPPED"
+    else
+        FeedStatus.Text="READY"
+    end
+end)
+
 heading(SettingsPage,"SETTINGS")
 local AutoUnequipToggle=toggleRow(SettingsPage,48,"Auto Unequip Egg at Base")
 
@@ -1676,14 +1838,17 @@ Status.TextColor3=Color3.fromRGB(137,126,151); Status.TextXAlignment=Enum.TextXA
 local function selectPage(page)
     local main=page=="MAIN"
     local esp=page=="ESP"
+    local autoFeed=page=="AUTO_FEED"
     local settings=page=="SETTINGS"
-    MainPage.Visible=main; EspPage.Visible=esp; SettingsPage.Visible=settings
+    MainPage.Visible=main; EspPage.Visible=esp; AutoFeedPage.Visible=autoFeed; SettingsPage.Visible=settings
     MainNav.BackgroundColor3=main and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
     EspNav.BackgroundColor3=esp and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
+    AutoFeedNav.BackgroundColor3=autoFeed and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
     SettingsNav.BackgroundColor3=settings and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
 end
 MainNav.MouseButton1Click:Connect(function() selectPage("MAIN") end)
 EspNav.MouseButton1Click:Connect(function() selectPage("ESP") end)
+AutoFeedNav.MouseButton1Click:Connect(function() selectPage("AUTO_FEED") end)
 SettingsNav.MouseButton1Click:Connect(function() selectPage("SETTINGS") end)
 selectPage("MAIN")
 
