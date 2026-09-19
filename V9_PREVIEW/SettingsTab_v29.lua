@@ -106,7 +106,22 @@ end)
 afkSw.MouseButton1Click:Connect(function() renderAntiAfk(not antiAfk) end)
 renderAntiAfk(true)
 
-local reset=button(general,"RESET ALL FEATURES",UDim2.fromOffset(16,153),UDim2.new(1,-32,0,37))
+-- Temporary manual test: fires the exact same pulse used by the Anti AFK worker.
+local testAfk=button(general,"TEST ANTI AFK",UDim2.fromOffset(16,145),UDim2.new(.5,-20,0,45))
+testAfk.TextColor3=Color3.fromRGB(220,170,255)
+testAfk.MouseButton1Click:Connect(function()
+ if not getgenv().AREA599_AntiAFK then
+  testAfk.Text="ANTI AFK OFF"
+  task.delay(1,function() if testAfk and testAfk.Parent then testAfk.Text="TEST ANTI AFK" end end)
+  return
+ end
+ local ok,err=pcall(antiAfkTap)
+ testAfk.Text=ok and "PULSE OK ✓" or "PULSE FAILED"
+ if not ok then warn("[599 AREA] Anti AFK test failed:",err) end
+ task.delay(1.5,function() if testAfk and testAfk.Parent then testAfk.Text="TEST ANTI AFK" end end)
+end)
+
+local reset=button(general,"RESET ALL FEATURES",UDim2.new(.5,4,0,145),UDim2.new(.5,-20,0,45))
 reset.TextColor3=Color3.fromRGB(255,140,165)
 reset.MouseButton1Click:Connect(function()
  local ch=lp.Character;local hum=ch and ch:FindFirstChildOfClass("Humanoid");local hrp=ch and ch:FindFirstChild("HumanoidRootPart")
