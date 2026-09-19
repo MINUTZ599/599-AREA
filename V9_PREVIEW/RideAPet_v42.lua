@@ -341,9 +341,26 @@ local function forceStopOnBaseplate()
     end
 
     -- Optional Settings action: only after own Baseplate is reached.
+    -- Ride A Pet can re-equip the carried egg on the next frames, so keep
+    -- requesting UnequipTools briefly instead of firing it only once.
     if AUTO_UNEQUIP_EGG and humanoid and humanoid.Parent then
-        humanoid:UnequipTools()
-        print("[599 SETTINGS] Auto Unequip Egg: released at Baseplate")
+        local unequipCharacter = humanoid.Parent
+        local unequipStarted = os.clock()
+
+        repeat
+            if not AUTO_UNEQUIP_EGG
+                or not humanoid.Parent
+                or humanoid.Health <= 0
+                or humanoid.Parent ~= unequipCharacter
+            then
+                break
+            end
+
+            humanoid:UnequipTools()
+            RunService.Heartbeat:Wait()
+        until os.clock() - unequipStarted >= 1.25
+
+        print("[599 SETTINGS] Auto Unequip Egg: release cycle completed at Baseplate")
     end
 
     if autoButton then
