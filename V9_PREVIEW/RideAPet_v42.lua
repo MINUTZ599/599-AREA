@@ -1666,6 +1666,15 @@ local FeedSelectedFood=nil
 local FeedFoods={"Grass","Bone","Meat","Magic Apple","Dragonfruit"}
 local FeedFoodChecks={}
 
+-- Selected pet label used by the click-selection handler below.
+-- Keep it local to Auto Feed so a pet click can never index a missing UI object.
+local FeedSelectedLabel=Instance.new("TextLabel")
+FeedSelectedLabel.Position=UDim2.fromOffset(18,72); FeedSelectedLabel.Size=UDim2.new(1,-36,0,20)
+FeedSelectedLabel.BackgroundTransparency=1; FeedSelectedLabel.Text="Selected: none"
+FeedSelectedLabel.Font=Enum.Font.GothamSemibold; FeedSelectedLabel.TextSize=10
+FeedSelectedLabel.TextColor3=Color3.fromRGB(180,169,194)
+FeedSelectedLabel.TextXAlignment=Enum.TextXAlignment.Left; FeedSelectedLabel.Parent=AutoFeedPage
+
 local FoodFilterTitle=Instance.new("TextLabel")
 FoodFilterTitle.Position=UDim2.fromOffset(18,103); FoodFilterTitle.Size=UDim2.new(1,-36,0,18)
 FoodFilterTitle.BackgroundTransparency=1; FoodFilterTitle.Text="SELECT FOOD"; FoodFilterTitle.Font=Enum.Font.GothamSemibold
