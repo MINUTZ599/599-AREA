@@ -146,15 +146,18 @@ local fps=0
 RunService.RenderStepped:Connect(function()
  frames+=1
  local now=os.clock()
- if now-last>=.5 then fps=math.floor(frames/(now-last)+.5);frames=0;last=now;fpsText.Text=tostring(fps) end
+ if now-last>=.5 then
+  fps=math.floor(frames/(now-last)+.5);frames=0;last=now
+  if fpsText and fpsText.Parent then fpsText.Text=tostring(fps) end
+ end
 end)
 task.spawn(function()
  while gui.Parent and home.Parent do
   local ping="--"
   pcall(function() ping=tostring(math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()+.5)) end)
-  pingText.Text=ping.." MS"
-  timeText.Text=os.date("%H:%M:%S")
-  playersText.Text="PLAYERS: "..#Players:GetPlayers()
+  if pingText and pingText.Parent then pingText.Text=ping.." MS" end
+  if timeText and timeText.Parent then timeText.Text=os.date("%H:%M:%S") end
+  if playersText and playersText.Parent then playersText.Text="PLAYERS: "..#Players:GetPlayers() end
   task.wait(1)
  end
 end)
