@@ -1863,6 +1863,114 @@ end)
 heading(SettingsPage,"SETTINGS")
 local AutoUnequipToggle=toggleRow(SettingsPage,48,"Auto Unequip Egg at Base")
 
+--============================================================
+-- RIDE SPEED - Ride A Pet only / independent from main 599 Speed
+--============================================================
+local RIDE_SPEED_ENABLED=false
+local RIDE_SPEED_VALUE=100
+local RIDE_SPEED_MIN=16
+local RIDE_SPEED_MAX=500
+local RideSpeedGuard=false
+local RideSpeedHumanoid=nil
+local RideSpeedConnection=nil
+
+local RideSpeedToggle=toggleRow(SettingsPage,106,"Ride Speed")
+
+local RideSpeedCard=Instance.new("Frame")
+RideSpeedCard.Position=UDim2.fromOffset(16,164); RideSpeedCard.Size=UDim2.new(1,-32,0,88)
+RideSpeedCard.BackgroundColor3=Color3.fromRGB(19,19,30); RideSpeedCard.BorderSizePixel=0; RideSpeedCard.Parent=SettingsPage
+local rideSpeedCorner=Instance.new("UICorner"); rideSpeedCorner.CornerRadius=UDim.new(0,10); rideSpeedCorner.Parent=RideSpeedCard
+
+local RideSpeedLabel=Instance.new("TextLabel")
+RideSpeedLabel.Position=UDim2.fromOffset(14,8); RideSpeedLabel.Size=UDim2.new(1,-28,0,20)
+RideSpeedLabel.BackgroundTransparency=1; RideSpeedLabel.Font=Enum.Font.GothamSemibold
+RideSpeedLabel.Text="RIDE SPEED VALUE : "..tostring(RIDE_SPEED_VALUE); RideSpeedLabel.TextSize=11
+RideSpeedLabel.TextColor3=Color3.fromRGB(242,240,247); RideSpeedLabel.TextXAlignment=Enum.TextXAlignment.Left
+RideSpeedLabel.Parent=RideSpeedCard
+
+local RideSpeedTrack=Instance.new("Frame")
+RideSpeedTrack.Position=UDim2.fromOffset(14,43); RideSpeedTrack.Size=UDim2.new(1,-28,0,8)
+RideSpeedTrack.BackgroundColor3=Color3.fromRGB(48,46,59); RideSpeedTrack.BorderSizePixel=0; RideSpeedTrack.Parent=RideSpeedCard
+local rideTrackCorner=Instance.new("UICorner"); rideTrackCorner.CornerRadius=UDim.new(1,0); rideTrackCorner.Parent=RideSpeedTrack
+
+local RideSpeedFill=Instance.new("Frame")
+RideSpeedFill.Size=UDim2.new((RIDE_SPEED_VALUE-RIDE_SPEED_MIN)/(RIDE_SPEED_MAX-RIDE_SPEED_MIN),0,1,0)
+RideSpeedFill.BackgroundColor3=Color3.fromRGB(159,37,238); RideSpeedFill.BorderSizePixel=0; RideSpeedFill.Parent=RideSpeedTrack
+local rideFillCorner=Instance.new("UICorner"); rideFillCorner.CornerRadius=UDim.new(1,0); rideFillCorner.Parent=RideSpeedFill
+
+local RideSpeedKnob=Instance.new("Frame")
+RideSpeedKnob.AnchorPoint=Vector2.new(.5,.5)
+RideSpeedKnob.Position=UDim2.new((RIDE_SPEED_VALUE-RIDE_SPEED_MIN)/(RIDE_SPEED_MAX-RIDE_SPEED_MIN),0,.5,0)
+RideSpeedKnob.Size=UDim2.fromOffset(18,18); RideSpeedKnob.BackgroundColor3=Color3.fromRGB(218,91,255)
+RideSpeedKnob.BorderSizePixel=0; RideSpeedKnob.Parent=RideSpeedTrack
+local rideKnobCorner=Instance.new("UICorner"); rideKnobCorner.CornerRadius=UDim.new(1,0); rideKnobCorner.Parent=RideSpeedKnob
+
+local RideSpeedHit=Instance.new("TextButton")
+RideSpeedHit.Position=UDim2.fromOffset(8,31); RideSpeedHit.Size=UDim2.new(1,-16,0,34)
+RideSpeedHit.BackgroundTransparency=1; RideSpeedHit.Text=""; RideSpeedHit.ZIndex=5; RideSpeedHit.Parent=RideSpeedCard
+
+local function applyRideSpeed()
+    if not RIDE_SPEED_ENABLED then return end
+    local character=LP.Character
+    local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+    if not humanoid or humanoid.Health<=0 then return end
+    RideSpeedHumanoid=humanoid
+    if math.abs(humanoid.WalkSpeed-RIDE_SPEED_VALUE)>.001 then
+        RideSpeedGuard=true
+        humanoid.WalkSpeed=RIDE_SPEED_VALUE
+        RideSpeedGuard=false
+    end
+end
+
+local function hookRideSpeedHumanoid()
+    if RideSpeedConnection then RideSpeedConnection:Disconnect(); RideSpeedConnection=nil end
+    local character=LP.Character
+    local humanoid=character and character:FindFirstChildOfClass("Humanoid")
+    RideSpeedHumanoid=humanoid
+    if not humanoid then return end
+    RideSpeedConnection=humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+        if RIDE_SPEED_ENABLED and not RideSpeedGuard and math.abs(humanoid.WalkSpeed-RIDE_SPEED_VALUE)>.001 then
+            task.defer(applyRideSpeed)
+        end
+    end)
+    if RIDE_SPEED_ENABLED then applyRideSpeed() end
+end
+
+local function setRideSpeedValue(value)
+    RIDE_SPEED_VALUE=math.clamp(math.floor(value+.5),RIDE_SPEED_MIN,RIDE_SPEED_MAX)
+    local alpha=(RIDE_SPEED_VALUE-RIDE_SPEED_MIN)/(RIDE_SPEED_MAX-RIDE_SPEED_MIN)
+    RideSpeedLabel.Text="RIDE SPEED VALUE : "..tostring(RIDE_SPEED_VALUE)
+    RideSpeedFill.Size=UDim2.new(alpha,0,1,0)
+    RideSpeedKnob.Position=UDim2.new(alpha,0,.5,0)
+    if RIDE_SPEED_ENABLED then applyRideSpeed() end
+end
+
+local rideDragging=false
+local function updateRideSlider(inputX)
+    local alpha=math.clamp((inputX-RideSpeedTrack.AbsolutePosition.X)/RideSpeedTrack.AbsoluteSize.X,0,1)
+    setRideSpeedValue(RIDE_SPEED_MIN+(RIDE_SPEED_MAX-RIDE_SPEED_MIN)*alpha)
+end
+RideSpeedHit.InputBegan:Connect(function(input)
+    if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+        rideDragging=true
+        updateRideSlider(input.Position.X)
+    end
+end)
+RideSpeedHit.InputEnded:Connect(function(input)
+    if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then rideDragging=false end
+end)
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if rideDragging and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
+        updateRideSlider(input.Position.X)
+    end
+end)
+
+hookRideSpeedHumanoid()
+LP.CharacterAdded:Connect(function()
+    task.wait(.25)
+    hookRideSpeedHumanoid()
+end)
+
 heading(EspPage,"EGG ESP V5.4")
 local EspToggle=toggleRow(EspPage,48,"World Egg ESP")
 filterTitle(EspPage,"RARITY FILTER (EGG ESP)",112)
@@ -1994,6 +2102,17 @@ AutoUnequipToggle.MouseButton1Click:Connect(function()
     AutoUnequipToggle.Text=AUTO_UNEQUIP_EGG and "ON" or "OFF"
     AutoUnequipToggle.BackgroundColor3=AUTO_UNEQUIP_EGG and Color3.fromRGB(159,37,238) or Color3.fromRGB(48,46,59)
     Status.Text=AUTO_UNEQUIP_EGG and "STATUS: AUTO UNEQUIP EGG ON" or "STATUS: AUTO UNEQUIP EGG OFF"
+end)
+
+RideSpeedToggle.MouseButton1Click:Connect(function()
+    RIDE_SPEED_ENABLED=not RIDE_SPEED_ENABLED
+    RideSpeedToggle.Text=RIDE_SPEED_ENABLED and "ON" or "OFF"
+    RideSpeedToggle.BackgroundColor3=RIDE_SPEED_ENABLED and Color3.fromRGB(159,37,238) or Color3.fromRGB(48,46,59)
+    Status.Text=RIDE_SPEED_ENABLED and ("STATUS: RIDE SPEED ON | "..tostring(RIDE_SPEED_VALUE)) or "STATUS: RIDE SPEED OFF"
+    if RIDE_SPEED_ENABLED then
+        hookRideSpeedHumanoid()
+        applyRideSpeed()
+    end
 end)
 
 getgenv()._599_UNIFIED_ESP_ENABLED=false
