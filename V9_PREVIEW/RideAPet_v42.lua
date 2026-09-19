@@ -1664,57 +1664,69 @@ local FeedRunning=false
 local FeedRunId=0
 local FeedSelectedFood="Bone"
 local FeedFoods={"Grass","Bone","Meat","Magic Apple","Dragonfruit"}
+local FeedFoodChecks={}
 
-local FeedSelectedLabel=Instance.new("TextLabel")
-FeedSelectedLabel.Position=UDim2.fromOffset(16,48); FeedSelectedLabel.Size=UDim2.new(1,-32,0,44)
-FeedSelectedLabel.BackgroundColor3=Color3.fromRGB(19,19,30); FeedSelectedLabel.BorderSizePixel=0
-FeedSelectedLabel.Text="Selected: NONE  |  Click a pet"; FeedSelectedLabel.TextWrapped=true
-FeedSelectedLabel.Font=Enum.Font.GothamSemibold; FeedSelectedLabel.TextSize=12
-FeedSelectedLabel.TextColor3=Color3.fromRGB(255,190,90); FeedSelectedLabel.Parent=AutoFeedPage
-local feedSelectedCorner=Instance.new("UICorner"); feedSelectedCorner.CornerRadius=UDim.new(0,10); feedSelectedCorner.Parent=FeedSelectedLabel
+local FoodFilterTitle=Instance.new("TextLabel")
+FoodFilterTitle.Position=UDim2.fromOffset(18,103); FoodFilterTitle.Size=UDim2.new(1,-36,0,18)
+FoodFilterTitle.BackgroundTransparency=1; FoodFilterTitle.Text="SELECT FOOD"; FoodFilterTitle.Font=Enum.Font.GothamSemibold
+FoodFilterTitle.TextSize=11; FoodFilterTitle.TextColor3=Color3.fromRGB(190,57,255)
+FoodFilterTitle.TextXAlignment=Enum.TextXAlignment.Left; FoodFilterTitle.Parent=AutoFeedPage
 
-local FoodButton=Instance.new("TextButton")
-FoodButton.Position=UDim2.fromOffset(16,108); FoodButton.Size=UDim2.new(1,-32,0,36)
-FoodButton.BackgroundColor3=Color3.fromRGB(19,19,30); FoodButton.BorderSizePixel=0
-FoodButton.Text="Food: Bone  ▼"; FoodButton.Font=Enum.Font.GothamSemibold; FoodButton.TextSize=12
-FoodButton.TextColor3=Color3.fromRGB(242,240,247); FoodButton.Parent=AutoFeedPage
-local foodButtonCorner=Instance.new("UICorner"); foodButtonCorner.CornerRadius=UDim.new(0,9); foodButtonCorner.Parent=FoodButton
+local FoodFilterBox=Instance.new("Frame")
+FoodFilterBox.Position=UDim2.fromOffset(16,126); FoodFilterBox.Size=UDim2.new(1,-32,0,86)
+FoodFilterBox.BackgroundColor3=Color3.fromRGB(19,19,30); FoodFilterBox.BorderSizePixel=0; FoodFilterBox.Parent=AutoFeedPage
+local foodFilterCorner=Instance.new("UICorner"); foodFilterCorner.CornerRadius=UDim.new(0,9); foodFilterCorner.Parent=FoodFilterBox
 
-local FoodDrop=Instance.new("Frame")
-FoodDrop.Position=UDim2.fromOffset(16,146); FoodDrop.Size=UDim2.new(1,-32,0,0)
-FoodDrop.BackgroundColor3=Color3.fromRGB(15,15,25); FoodDrop.BorderSizePixel=0
-FoodDrop.ClipsDescendants=true; FoodDrop.Visible=false; FoodDrop.ZIndex=20; FoodDrop.Parent=AutoFeedPage
-local foodDropCorner=Instance.new("UICorner"); foodDropCorner.CornerRadius=UDim.new(0,9); foodDropCorner.Parent=FoodDrop
-local foodLayout=Instance.new("UIListLayout"); foodLayout.Parent=FoodDrop
-
-for _,foodName in ipairs(FeedFoods) do
-    local option=Instance.new("TextButton")
-    option.Size=UDim2.new(1,0,0,28); option.BackgroundColor3=Color3.fromRGB(20,19,31)
-    option.BorderSizePixel=0; option.Text=foodName; option.Font=Enum.Font.Gotham
-    option.TextSize=11; option.TextColor3=Color3.fromRGB(238,234,244); option.ZIndex=21; option.Parent=FoodDrop
-    option.MouseButton1Click:Connect(function()
-        FeedSelectedFood=foodName
-        FoodButton.Text="Food: "..foodName.."  ▼"
-        FoodDrop.Visible=false
-        FoodDrop.Size=UDim2.new(1,-32,0,0)
-    end)
+local function refreshFeedFoodChecks()
+    for name,data in pairs(FeedFoodChecks) do
+        local selected=name==FeedSelectedFood
+        data.box.BackgroundColor3=selected and Color3.fromRGB(92,27,151) or Color3.fromRGB(22,21,34)
+        data.mark.Text=selected and "✓" or ""
+        data.mark.TextColor3=Color3.fromRGB(220,170,255)
+    end
 end
 
-FoodButton.MouseButton1Click:Connect(function()
-    local open=not FoodDrop.Visible
-    FoodDrop.Visible=open
-    FoodDrop.Size=open and UDim2.new(1,-32,0,#FeedFoods*28) or UDim2.new(1,-32,0,0)
-    FoodButton.Text="Food: "..FeedSelectedFood..(open and "  ▲" or "  ▼")
-end)
+for i,foodName in ipairs(FeedFoods) do
+    local col=(i-1)%2
+    local row=math.floor((i-1)/2)
+    local holder=Instance.new("TextButton")
+    holder.Position=UDim2.new(col*.5,12+col*4,0,8+row*25)
+    holder.Size=UDim2.new(.5,-20,0,22); holder.BackgroundTransparency=1
+    holder.Text=""; holder.Parent=FoodFilterBox
+
+    local box=Instance.new("Frame")
+    box.Position=UDim2.fromOffset(0,2); box.Size=UDim2.fromOffset(18,18)
+    box.BackgroundColor3=Color3.fromRGB(22,21,34); box.BorderSizePixel=0; box.Parent=holder
+    local bc=Instance.new("UICorner"); bc.CornerRadius=UDim.new(0,5); bc.Parent=box
+    local bs=Instance.new("UIStroke"); bs.Color=Color3.fromRGB(128,76,155); bs.Thickness=1; bs.Parent=box
+
+    local mark=Instance.new("TextLabel")
+    mark.Size=UDim2.fromScale(1,1); mark.BackgroundTransparency=1; mark.Text=""
+    mark.Font=Enum.Font.GothamBold; mark.TextSize=13; mark.TextColor3=Color3.fromRGB(220,170,255); mark.Parent=box
+
+    local label=Instance.new("TextLabel")
+    label.Position=UDim2.fromOffset(25,0); label.Size=UDim2.new(1,-25,1,0)
+    label.BackgroundTransparency=1; label.Text=foodName; label.Font=Enum.Font.Gotham
+    label.TextSize=10; label.TextColor3=Color3.fromRGB(210,204,218)
+    label.TextXAlignment=Enum.TextXAlignment.Left; label.Parent=holder
+
+    FeedFoodChecks[foodName]={box=box,mark=mark}
+    holder.MouseButton1Click:Connect(function()
+        FeedSelectedFood=foodName
+        refreshFeedFoodChecks()
+        FeedStatus.Text="FOOD: "..foodName
+    end)
+end
+refreshFeedFoodChecks()
 
 local AmountLabel=Instance.new("TextLabel")
-AmountLabel.Position=UDim2.fromOffset(18,160); AmountLabel.Size=UDim2.new(1,-36,0,18)
+AmountLabel.Position=UDim2.fromOffset(18,220); AmountLabel.Size=UDim2.new(1,-36,0,18)
 AmountLabel.BackgroundTransparency=1; AmountLabel.Text="AMOUNT"; AmountLabel.Font=Enum.Font.GothamSemibold
 AmountLabel.TextSize=11; AmountLabel.TextColor3=Color3.fromRGB(190,57,255)
 AmountLabel.TextXAlignment=Enum.TextXAlignment.Left; AmountLabel.Parent=AutoFeedPage
 
 local FeedAmountBox=Instance.new("TextBox")
-FeedAmountBox.Position=UDim2.fromOffset(16,181); FeedAmountBox.Size=UDim2.new(1,-32,0,36)
+FeedAmountBox.Position=UDim2.fromOffset(16,239); FeedAmountBox.Size=UDim2.new(1,-32,0,36)
 FeedAmountBox.BackgroundColor3=Color3.fromRGB(19,19,30); FeedAmountBox.BorderSizePixel=0
 FeedAmountBox.PlaceholderText="Example: 200"; FeedAmountBox.Text="5"; FeedAmountBox.ClearTextOnFocus=false
 FeedAmountBox.Font=Enum.Font.Gotham; FeedAmountBox.TextSize=12; FeedAmountBox.TextColor3=Color3.fromRGB(242,240,247)
@@ -1722,19 +1734,19 @@ FeedAmountBox.PlaceholderColor3=Color3.fromRGB(125,115,138); FeedAmountBox.Paren
 local feedAmountCorner=Instance.new("UICorner"); feedAmountCorner.CornerRadius=UDim.new(0,9); feedAmountCorner.Parent=FeedAmountBox
 
 local FeedStatus=Instance.new("TextLabel")
-FeedStatus.Position=UDim2.fromOffset(16,229); FeedStatus.Size=UDim2.new(1,-32,0,24)
+FeedStatus.Position=UDim2.fromOffset(16,280); FeedStatus.Size=UDim2.new(1,-32,0,24)
 FeedStatus.BackgroundTransparency=1; FeedStatus.Text="READY"; FeedStatus.Font=Enum.Font.GothamBold
 FeedStatus.TextSize=11; FeedStatus.TextColor3=Color3.fromRGB(180,169,194); FeedStatus.Parent=AutoFeedPage
 
 local FeedStart=Instance.new("TextButton")
-FeedStart.Position=UDim2.fromOffset(16,267); FeedStart.Size=UDim2.new(.5,-20,0,42)
+FeedStart.Position=UDim2.fromOffset(16,306); FeedStart.Size=UDim2.new(.5,-20,0,42)
 FeedStart.BackgroundColor3=Color3.fromRGB(145,45,220); FeedStart.BorderSizePixel=0
 FeedStart.Text="START"; FeedStart.Font=Enum.Font.GothamBold; FeedStart.TextSize=12
 FeedStart.TextColor3=Color3.new(1,1,1); FeedStart.Parent=AutoFeedPage
 local feedStartCorner=Instance.new("UICorner"); feedStartCorner.CornerRadius=UDim.new(0,9); feedStartCorner.Parent=FeedStart
 
 local FeedStop=Instance.new("TextButton")
-FeedStop.Position=UDim2.new(.5,4,0,267); FeedStop.Size=UDim2.new(.5,-20,0,42)
+FeedStop.Position=UDim2.new(.5,4,0,306); FeedStop.Size=UDim2.new(.5,-20,0,42)
 FeedStop.BackgroundColor3=Color3.fromRGB(48,46,59); FeedStop.BorderSizePixel=0
 FeedStop.Text="STOP"; FeedStop.Font=Enum.Font.GothamBold; FeedStop.TextSize=12
 FeedStop.TextColor3=Color3.new(1,1,1); FeedStop.Parent=AutoFeedPage
