@@ -1973,14 +1973,25 @@ end)
 
 heading(EspPage,"EGG ESP V5.4")
 local EspToggle=toggleRow(EspPage,48,"World Egg ESP")
-filterTitle(EspPage,"RARITY FILTER (EGG ESP)",112)
+local HiglightEggToggle=toggleRow(EspPage,104,"HIGLIGHT EGG")
+task.spawn(function()
+    local ok,mod=pcall(function()
+        return loadstring(game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/RideAPet_HiglightEgg_v1.lua"))()
+    end)
+    if ok and type(mod)=="function" then
+        mod({WS=WS,RunService=RunService,Button=HiglightEggToggle})
+    else
+        warn("[599 HIGLIGHT EGG] module load failed:",mod)
+    end
+end)
+filterTitle(EspPage,"RARITY FILTER (EGG ESP)",166)
 local EspEnabledRarities={}
 
 local UnifiedHiddenPointers=Instance.new("Folder")
 UnifiedHiddenPointers.Name="599_ESP_HIDDEN_POINTERS"
 UnifiedHiddenPointers.Parent=RS
 
-checkboxGrid(EspPage,140,EspEnabledRarities,function()
+checkboxGrid(EspPage,194,EspEnabledRarities,function()
     local espState=getgenv()._599_WORLD_ESP_V54
     local espOnNow=getgenv()._599_UNIFIED_ESP_ENABLED==true
     if espState and espState.Tracked then
