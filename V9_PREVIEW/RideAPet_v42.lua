@@ -1969,18 +1969,101 @@ hookRideSpeedHumanoid()
 LP.CharacterAdded:Connect(function()
     task.wait(.25)
     hookRideSpeedHumanoid()
+    return box
 end)
 
 heading(EspPage,"EGG ESP V5.4")
 local EspToggle=toggleRow(EspPage,48,"World Egg ESP")
-filterTitle(EspPage,"RARITY FILTER (EGG ESP)",112)
+
+-- HIGLIGHT EGG: independent purple neon pulse highlight.
+local HighlightEggToggle=toggleRow(EspPage,104,"HIGLIGHT EGG")
+local HIGHLIGHT_EGG_ENABLED=false
+local HIGHLIGHT_EGG_NAME="599_EGG_HIGHLIGHT"
+local HIGHLIGHT_FILL=Color3.fromRGB(190,0,255)
+local HIGHLIGHT_OUTLINE=Color3.fromRGB(255,80,255)
+local HIGHLIGHT_PULSE_SPEED=3
+local HIGHLIGHT_MIN_TRANSPARENCY=0.05
+local HIGHLIGHT_MAX_TRANSPARENCY=0.35
+local HighlightActive={}
+
+local function removeEggHighlight(egg)
+    local h=egg and egg:FindFirstChild(HIGHLIGHT_EGG_NAME)
+    if h then HighlightActive[h]=nil; h:Destroy() end
+end
+
+local function addEggHighlight(egg)
+    if not HIGHLIGHT_EGG_ENABLED or not egg or not egg.Parent then return end
+    local h=egg:FindFirstChild(HIGHLIGHT_EGG_NAME)
+    if h then HighlightActive[h]=true; return end
+    h=Instance.new("Highlight")
+    h.Name=HIGHLIGHT_EGG_NAME
+    h.Adornee=egg
+    h.FillColor=HIGHLIGHT_FILL
+    h.OutlineColor=HIGHLIGHT_OUTLINE
+    h.FillTransparency=0.1
+    h.OutlineTransparency=0
+    h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+    h.Parent=egg
+    HighlightActive[h]=true
+end
+
+local function removeAllEggHighlights()
+    for h in pairs(HighlightActive) do if h and h.Parent then h:Destroy() end end
+    table.clear(HighlightActive)
+    local folder=WS:FindFirstChild("RenderedEggs")
+    if folder then for _,egg in ipairs(folder:GetChildren()) do removeEggHighlight(egg) end end
+end
+
+local function refreshEggHighlights()
+    local folder=WS:FindFirstChild("RenderedEggs")
+    if not folder then return end
+    for _,egg in ipairs(folder:GetChildren()) do
+        if HIGHLIGHT_EGG_ENABLED then addEggHighlight(egg) else removeEggHighlight(egg) end
+    end
+end
+
+local function setHighlightEggEnabled(on)
+    HIGHLIGHT_EGG_ENABLED=on==true
+    HighlightEggToggle.Text=HIGHLIGHT_EGG_ENABLED and "ON" or "OFF"
+    HighlightEggToggle.BackgroundColor3=HIGHLIGHT_EGG_ENABLED and Color3.fromRGB(125,65,230) or Color3.fromRGB(48,46,59)
+    if HIGHLIGHT_EGG_ENABLED then refreshEggHighlights() else removeAllEggHighlights() end
+end
+
+HighlightEggToggle.MouseButton1Click:Connect(function()
+    setHighlightEggEnabled(not HIGHLIGHT_EGG_ENABLED)
+end)
+
+local HighlightUIS=game:GetService("UserInputService")
+HighlightUIS.InputBegan:Connect(function(input,gameProcessed)
+    if gameProcessed or HighlightUIS:GetFocusedTextBox() then return end
+    if input.KeyCode==Enum.KeyCode.H then setHighlightEggEnabled(not HIGHLIGHT_EGG_ENABLED) end
+end)
+
+task.spawn(function()
+    while HighlightEggToggle.Parent do
+        if HIGHLIGHT_EGG_ENABLED then refreshEggHighlights() end
+        task.wait(0.4)
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if not HIGHLIGHT_EGG_ENABLED then return end
+    local pulse=(math.sin(tick()*HIGHLIGHT_PULSE_SPEED)+1)/2
+    local transparency=HIGHLIGHT_MIN_TRANSPARENCY+(HIGHLIGHT_MAX_TRANSPARENCY-HIGHLIGHT_MIN_TRANSPARENCY)*pulse
+    for h in pairs(HighlightActive) do
+        if h and h.Parent then h.FillTransparency=transparency; h.OutlineTransparency=0
+        else HighlightActive[h]=nil end
+    end
+end)
+
+filterTitle(EspPage,"RARITY FILTER (EGG ESP)",166)
 local EspEnabledRarities={}
 
 local UnifiedHiddenPointers=Instance.new("Folder")
 UnifiedHiddenPointers.Name="599_ESP_HIDDEN_POINTERS"
 UnifiedHiddenPointers.Parent=RS
 
-checkboxGrid(EspPage,140,EspEnabledRarities,function()
+local EspRarityBox=checkboxGrid(EspPage,194,EspEnabledRarities,function()
     local espState=getgenv()._599_WORLD_ESP_V54
     local espOnNow=getgenv()._599_UNIFIED_ESP_ENABLED==true
     if espState and espState.Tracked then
@@ -1994,6 +2077,7 @@ checkboxGrid(EspPage,140,EspEnabledRarities,function()
         end
     end
 end)
+if EspRarityBox then EspRarityBox.Size=UDim2.new(1,-32,0,132) end
 
 local Status=Instance.new("TextLabel")
 Status.Position=UDim2.new(0,16,1,-30); Status.Size=UDim2.new(1,-32,0,20)
