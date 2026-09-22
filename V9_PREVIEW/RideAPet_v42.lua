@@ -1637,7 +1637,6 @@ local function checkboxGrid(parent,y,stateTable,onChanged)
             if onChanged then onChanged(rarity) end
         end)
     end
-    return box
 end
 
 heading(MainPage,"AUTO PICKUP")
@@ -1974,15 +1973,14 @@ end)
 
 heading(EspPage,"EGG ESP V5.4")
 local EspToggle=toggleRow(EspPage,48,"World Egg ESP")
-local HighlightEggToggle=toggleRow(EspPage,104,"HIGLIGHT EGG")
-filterTitle(EspPage,"RARITY FILTER (EGG ESP)",166)
+filterTitle(EspPage,"RARITY FILTER (EGG ESP)",112)
 local EspEnabledRarities={}
 
 local UnifiedHiddenPointers=Instance.new("Folder")
 UnifiedHiddenPointers.Name="599_ESP_HIDDEN_POINTERS"
 UnifiedHiddenPointers.Parent=RS
 
-local EspRarityBox=checkboxGrid(EspPage,194,EspEnabledRarities,function()
+checkboxGrid(EspPage,140,EspEnabledRarities,function()
     local espState=getgenv()._599_WORLD_ESP_V54
     local espOnNow=getgenv()._599_UNIFIED_ESP_ENABLED==true
     if espState and espState.Tracked then
@@ -1994,85 +1992,6 @@ local EspRarityBox=checkboxGrid(EspPage,194,EspEnabledRarities,function()
                 data.Pointer.Parent=showNow and WS or UnifiedHiddenPointers
             end
         end
-    end
-end)
-if EspRarityBox then EspRarityBox.Size=UDim2.new(1,-32,0,132) end
-
--- HIGLIGHT EGG is isolated in getgenv so this large V42 chunk does not
--- allocate extra locals (Luau chunks are limited to 200 local registers).
-local HE=getgenv()
-HE._599_HE_ENABLED=false
-HE._599_HE_ACTIVE=HE._599_HE_ACTIVE or {}
-HE._599_HE_BUTTON=HighlightEggToggle
-
-HE._599_HE_REMOVE_ALL=function()
-    for h in pairs(HE._599_HE_ACTIVE) do
-        if h and h.Parent then h:Destroy() end
-        HE._599_HE_ACTIVE[h]=nil
-    end
-    local folder=WS:FindFirstChild("RenderedEggs")
-    if folder then
-        for _,egg in ipairs(folder:GetChildren()) do
-            local h=egg:FindFirstChild("599_EGG_HIGHLIGHT")
-            if h then h:Destroy() end
-        end
-    end
-end
-
-HE._599_HE_REFRESH=function()
-    local folder=WS:FindFirstChild("RenderedEggs")
-    if not folder or not HE._599_HE_ENABLED then return end
-    for _,egg in ipairs(folder:GetChildren()) do
-        local h=egg:FindFirstChild("599_EGG_HIGHLIGHT")
-        if not h then
-            h=Instance.new("Highlight")
-            h.Name="599_EGG_HIGHLIGHT"
-            h.Adornee=egg
-            h.FillColor=Color3.fromRGB(190,0,255)
-            h.OutlineColor=Color3.fromRGB(255,80,255)
-            h.FillTransparency=0.1
-            h.OutlineTransparency=0
-            h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
-            h.Parent=egg
-        end
-        HE._599_HE_ACTIVE[h]=true
-    end
-end
-
-HE._599_HE_SET=function(on)
-    HE._599_HE_ENABLED=on==true
-    local b=HE._599_HE_BUTTON
-    if b and b.Parent then
-        b.Text=HE._599_HE_ENABLED and "ON" or "OFF"
-        b.BackgroundColor3=HE._599_HE_ENABLED and Color3.fromRGB(125,65,230) or Color3.fromRGB(48,46,59)
-    end
-    if HE._599_HE_ENABLED then HE._599_HE_REFRESH() else HE._599_HE_REMOVE_ALL() end
-end
-
-HighlightEggToggle.MouseButton1Click:Connect(function()
-    HE._599_HE_SET(not HE._599_HE_ENABLED)
-end)
-
-game:GetService("UserInputService").InputBegan:Connect(function(input,processed)
-    local uis=game:GetService("UserInputService")
-    if processed or uis:GetFocusedTextBox() then return end
-    if input.KeyCode==Enum.KeyCode.H then HE._599_HE_SET(not HE._599_HE_ENABLED) end
-end)
-
-task.spawn(function()
-    while HE._599_HE_BUTTON and HE._599_HE_BUTTON.Parent do
-        if HE._599_HE_ENABLED then HE._599_HE_REFRESH() end
-        task.wait(0.4)
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if not HE._599_HE_ENABLED then return end
-    local p=(math.sin(tick()*3)+1)/2
-    local tr=0.05+(0.35-0.05)*p
-    for h in pairs(HE._599_HE_ACTIVE) do
-        if h and h.Parent then h.FillTransparency=tr; h.OutlineTransparency=0
-        else HE._599_HE_ACTIVE[h]=nil end
     end
 end)
 
