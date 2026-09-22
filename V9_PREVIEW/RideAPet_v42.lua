@@ -1637,6 +1637,7 @@ local function checkboxGrid(parent,y,stateTable,onChanged)
             if onChanged then onChanged(rarity) end
         end)
     end
+    return box
 end
 
 heading(MainPage,"AUTO PICKUP")
@@ -1969,7 +1970,6 @@ hookRideSpeedHumanoid()
 LP.CharacterAdded:Connect(function()
     task.wait(.25)
     hookRideSpeedHumanoid()
-    return box
 end)
 
 heading(EspPage,"EGG ESP V5.4")
