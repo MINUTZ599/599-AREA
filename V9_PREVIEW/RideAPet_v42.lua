@@ -1984,14 +1984,14 @@ task.spawn(function()
         warn("[599 HIGLIGHT EGG] module load failed:",mod)
     end
 end)
-filterTitle(EspPage,"RARITY FILTER (EGG ESP)",164)
+filterTitle(EspPage,"RARITY FILTER (EGG ESP)",158)
 local EspEnabledRarities={}
 
 local UnifiedHiddenPointers=Instance.new("Folder")
 UnifiedHiddenPointers.Name="599_ESP_HIDDEN_POINTERS"
 UnifiedHiddenPointers.Parent=RS
 
-local EspRarityBox=checkboxGrid(EspPage,190,EspEnabledRarities,function()
+checkboxGrid(EspPage,184,EspEnabledRarities,function()
     local espState=getgenv()._599_WORLD_ESP_V54
     local espOnNow=getgenv()._599_UNIFIED_ESP_ENABLED==true
     if espState and espState.Tracked then
@@ -2005,8 +2005,15 @@ local EspRarityBox=checkboxGrid(EspPage,190,EspEnabledRarities,function()
         end
     end
 end)
--- Layout-only: keep rarity panel inside the existing Ride A Pet window.
-if EspRarityBox then EspRarityBox.Size=UDim2.new(1,-32,0,128) end
+
+-- Layout-only: resize the Egg ESP rarity frame directly.
+-- checkboxGrid intentionally returns nothing in the stable V42 source.
+for _,child in ipairs(EspPage:GetChildren()) do
+    if child:IsA("Frame") and child.Position==UDim2.fromOffset(16,184) then
+        child.Size=UDim2.new(1,-32,0,126)
+        break
+    end
+end
 
 local Status=Instance.new("TextLabel")
 Status.Position=UDim2.new(0,16,1,-30); Status.Size=UDim2.new(1,-32,0,20)
