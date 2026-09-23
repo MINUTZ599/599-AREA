@@ -1539,7 +1539,7 @@ end
 local MainNav=navButton(12,"","Main",104857036411942)
 local EspNav=navButton(70,"","Egg ESP",122991701514648)
 local AutoFeedNav=navButton(128,"","Auto Feed",75276966253398)
-VisualNav=navButton(186,"◉","Visual")
+VisualNav=navButton(186,"","Visual",76563711225804)
 local SettingsNav=navButton(244,"⚙","Settings")
 SettingsNav.AutoButtonColor=false
 
