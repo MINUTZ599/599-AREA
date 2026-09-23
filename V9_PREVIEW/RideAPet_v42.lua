@@ -1539,11 +1539,12 @@ end
 local MainNav=navButton(12,"","Main",104857036411942)
 local EspNav=navButton(70,"","Egg ESP",122991701514648)
 local AutoFeedNav=navButton(128,"","Auto Feed",75276966253398)
-local SettingsNav=navButton(186,"⚙","Settings")
+VisualNav=navButton(186,"◉","Visual")
+local SettingsNav=navButton(244,"⚙","Settings")
 SettingsNav.AutoButtonColor=false
 
 local Motto=Instance.new("TextLabel")
-Motto.Position=UDim2.fromOffset(16,278); Motto.Size=UDim2.new(1,-32,0,70)
+Motto.Position=UDim2.fromOffset(16,306); Motto.Size=UDim2.new(1,-32,0,52)
 Motto.BackgroundTransparency=1; Motto.Font=Enum.Font.GothamBold
 Motto.Text="PLAY\nSMART\nHATCH\nFASTER"; Motto.TextSize=11
 Motto.TextColor3=Color3.fromRGB(152,128,177); Motto.TextXAlignment=Enum.TextXAlignment.Left
@@ -1555,6 +1556,8 @@ local EspPage=Instance.new("Frame")
 EspPage.Size=UDim2.fromScale(1,1); EspPage.BackgroundTransparency=1; EspPage.Visible=false; EspPage.Parent=Content
 local AutoFeedPage=Instance.new("Frame")
 AutoFeedPage.Size=UDim2.fromScale(1,1); AutoFeedPage.BackgroundTransparency=1; AutoFeedPage.Visible=false; AutoFeedPage.Parent=Content
+VisualPage=Instance.new("Frame")
+VisualPage.Size=UDim2.fromScale(1,1); VisualPage.BackgroundTransparency=1; VisualPage.Visible=false; VisualPage.Parent=Content
 local SettingsPage=Instance.new("Frame")
 SettingsPage.Size=UDim2.fromScale(1,1); SettingsPage.BackgroundTransparency=1; SettingsPage.Visible=false; SettingsPage.Parent=Content
 
@@ -2024,16 +2027,36 @@ local function selectPage(page)
     local main=page=="MAIN"
     local esp=page=="ESP"
     local autoFeed=page=="AUTO_FEED"
+    local visual=page=="VISUAL"
     local settings=page=="SETTINGS"
-    MainPage.Visible=main; EspPage.Visible=esp; AutoFeedPage.Visible=autoFeed; SettingsPage.Visible=settings
+    MainPage.Visible=main; EspPage.Visible=esp; AutoFeedPage.Visible=autoFeed; VisualPage.Visible=visual; SettingsPage.Visible=settings
     MainNav.BackgroundColor3=main and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
     EspNav.BackgroundColor3=esp and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
     AutoFeedNav.BackgroundColor3=autoFeed and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
+    VisualNav.BackgroundColor3=visual and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
     SettingsNav.BackgroundColor3=settings and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
 end
-MainNav.MouseButton1Click:Connect(function() selectPage("MAIN") end)
+MainNav.MouseButton1Click:Connect(function() selectPage("MAIN")
+
+task.spawn(function()
+    local ok,src=pcall(function()
+        return game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/RideAPet_Visual_v1.lua?v=20260923_visual1")
+    end)
+    if not ok then warn("[599 VISUAL] resource download failed: "..tostring(src)); return end
+    local fn,err=loadstring(src)
+    if not fn then warn("[599 VISUAL] resource compile failed: "..tostring(err)); return end
+    local ran,runErr=pcall(fn)
+    if not ran then warn("[599 VISUAL] resource run failed: "..tostring(runErr)); return end
+    local env=getgenv and getgenv() or _G
+    if env._599_RAP_VISUAL_INSTALL then
+        local installed,installErr=pcall(env._599_RAP_VISUAL_INSTALL,VisualPage,toggleRow,Status)
+        if not installed then warn("[599 VISUAL] install failed: "..tostring(installErr)) end
+    end
+end)
+ end)
 EspNav.MouseButton1Click:Connect(function() selectPage("ESP") end)
 AutoFeedNav.MouseButton1Click:Connect(function() selectPage("AUTO_FEED") end)
+VisualNav.MouseButton1Click:Connect(function() selectPage("VISUAL") end)
 SettingsNav.MouseButton1Click:Connect(function() selectPage("SETTINGS") end)
 selectPage("MAIN")
 
