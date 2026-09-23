@@ -2352,7 +2352,7 @@ end
 
 --============================================================
 
-local STATE = {
+STATE = {
 
     Connections = {},
 
@@ -2372,9 +2372,9 @@ ENV._599_WORLD_ESP_V54 = STATE
 
 --============================================================
 
-local ESP_ENABLED = true
+ESP_ENABLED = true
 
-local MAX_DISTANCE = 100000
+MAX_DISTANCE = 100000
 
 --============================================================
 
@@ -2382,9 +2382,9 @@ local MAX_DISTANCE = 100000
 
 --============================================================
 
-local BOARD_WIDTH = 140
+BOARD_WIDTH = 140
 
-local BOARD_HEIGHT = 46
+BOARD_HEIGHT = 46
 
 --============================================================
 
@@ -2399,7 +2399,7 @@ local BOARD_HEIGHT = 46
 -- 50 = sangat tinggi
 
 --============================================================
-local BOARD_HEIGHT_STUDS = 130
+BOARD_HEIGHT_STUDS = 130
 
 --============================================================
 
@@ -2417,9 +2417,9 @@ local BOARD_HEIGHT_STUDS = 130
 
 --============================================================
 
-local LINE_THICKNESS = 0.87
+LINE_THICKNESS = 0.87
 
-local LINE_TRANSPARENCY = 0.05
+LINE_TRANSPARENCY = 0.05
 
 --============================================================
 
@@ -2427,9 +2427,9 @@ local LINE_TRANSPARENCY = 0.05
 
 --============================================================
 
-local NAME_TEXT_SIZE = 13
+NAME_TEXT_SIZE = 13
 
-local DISTANCE_TEXT_SIZE = 11
+DISTANCE_TEXT_SIZE = 11
 
 --============================================================
 
@@ -2445,7 +2445,7 @@ local DISTANCE_TEXT_SIZE = 11
 
 --============================================================
 
-local BLACKHOLE_RAINBOW_SPEED = 0.12
+BLACKHOLE_RAINBOW_SPEED = 0.12
 
 --============================================================
 
@@ -2457,13 +2457,13 @@ local BLACKHOLE_RAINBOW_SPEED = 0.12
 
 --============================================================
 
-local ENABLED_RARITIES = {
+ENABLED_RARITIES = {
 
     -- Ethereal = true,
 
 }
 
-local ENABLED_EGGS = {
+ENABLED_EGGS = {
 
     -- ["Blackhole Egg"] = true,
 
@@ -2475,7 +2475,7 @@ local ENABLED_EGGS = {
 
 --============================================================
 
-local RARITY_COLORS = {
+RARITY_COLORS = {
 
     Common =
 
@@ -2575,7 +2575,7 @@ local RARITY_COLORS = {
 
 }
 
-local DEFAULT_COLOR =
+DEFAULT_COLOR =
 
     Color3.fromRGB(
 
@@ -2593,7 +2593,7 @@ local DEFAULT_COLOR =
 
 --============================================================
 
-local function isBlackholeEgg(name)
+function isBlackholeEgg(name)
 
     return string.lower(
 
@@ -2603,7 +2603,7 @@ local function isBlackholeEgg(name)
 
 end
 
-local function getRainbowColor()
+function getRainbowColor()
 
     local hue =
 
