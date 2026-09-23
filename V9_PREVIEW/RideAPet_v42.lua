@@ -2036,11 +2036,16 @@ local function selectPage(page)
     VisualNav.BackgroundColor3=visual and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
     SettingsNav.BackgroundColor3=settings and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
 end
-MainNav.MouseButton1Click:Connect(function() selectPage("MAIN")
+MainNav.MouseButton1Click:Connect(function() selectPage("MAIN") end)
+EspNav.MouseButton1Click:Connect(function() selectPage("ESP") end)
+AutoFeedNav.MouseButton1Click:Connect(function() selectPage("AUTO_FEED") end)
+VisualNav.MouseButton1Click:Connect(function() selectPage("VISUAL") end)
+SettingsNav.MouseButton1Click:Connect(function() selectPage("SETTINGS") end)
+selectPage("MAIN")
 
 task.spawn(function()
     local ok,src=pcall(function()
-        return game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/RideAPet_Visual_v1.lua?v=20260923_visual1")
+        return game:HttpGet("https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/RideAPet_Visual_v1.lua?v=20260923_visual2")
     end)
     if not ok then warn("[599 VISUAL] resource download failed: "..tostring(src)); return end
     local fn,err=loadstring(src)
@@ -2053,12 +2058,6 @@ task.spawn(function()
         if not installed then warn("[599 VISUAL] install failed: "..tostring(installErr)) end
     end
 end)
- end)
-EspNav.MouseButton1Click:Connect(function() selectPage("ESP") end)
-AutoFeedNav.MouseButton1Click:Connect(function() selectPage("AUTO_FEED") end)
-VisualNav.MouseButton1Click:Connect(function() selectPage("VISUAL") end)
-SettingsNav.MouseButton1Click:Connect(function() selectPage("SETTINGS") end)
-selectPage("MAIN")
 
 local dragging,dragStart,startPos
 Header.InputBegan:Connect(function(i)
