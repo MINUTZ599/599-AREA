@@ -1539,12 +1539,11 @@ end
 local MainNav=navButton(12,"","Main",104857036411942)
 local EspNav=navButton(70,"","Egg ESP",122991701514648)
 local AutoFeedNav=navButton(128,"","Auto Feed",75276966253398)
-local VisualNav=navButton(186,"◉","Visual")
-local SettingsNav=navButton(244,"⚙","Settings")
+local SettingsNav=navButton(186,"⚙","Settings")
 SettingsNav.AutoButtonColor=false
 
 local Motto=Instance.new("TextLabel")
-Motto.Position=UDim2.fromOffset(16,306); Motto.Size=UDim2.new(1,-32,0,52)
+Motto.Position=UDim2.fromOffset(16,278); Motto.Size=UDim2.new(1,-32,0,70)
 Motto.BackgroundTransparency=1; Motto.Font=Enum.Font.GothamBold
 Motto.Text="PLAY\nSMART\nHATCH\nFASTER"; Motto.TextSize=11
 Motto.TextColor3=Color3.fromRGB(152,128,177); Motto.TextXAlignment=Enum.TextXAlignment.Left
@@ -1556,8 +1555,6 @@ local EspPage=Instance.new("Frame")
 EspPage.Size=UDim2.fromScale(1,1); EspPage.BackgroundTransparency=1; EspPage.Visible=false; EspPage.Parent=Content
 local AutoFeedPage=Instance.new("Frame")
 AutoFeedPage.Size=UDim2.fromScale(1,1); AutoFeedPage.BackgroundTransparency=1; AutoFeedPage.Visible=false; AutoFeedPage.Parent=Content
-local VisualPage=Instance.new("Frame")
-VisualPage.Size=UDim2.fromScale(1,1); VisualPage.BackgroundTransparency=1; VisualPage.Visible=false; VisualPage.Parent=Content
 local SettingsPage=Instance.new("Frame")
 SettingsPage.Size=UDim2.fromScale(1,1); SettingsPage.BackgroundTransparency=1; SettingsPage.Visible=false; SettingsPage.Parent=Content
 
@@ -1641,200 +1638,6 @@ local function checkboxGrid(parent,y,stateTable,onChanged)
         end)
     end
 end
-
-
---============================================================
--- VISUAL - Scale Pet + Delete Tree
--- Added only to Ride A Pet Game Hub. Existing features untouched.
---============================================================
-heading(VisualPage,"VISUAL")
-
-local PET_MIN_SIZE=0.20
-local PET_MAX_SIZE=5.00
-local PET_DEFAULT_SIZE=1.00
-local PetScaleEnabled=false
-local PetScaleValue=PET_DEFAULT_SIZE
-local PetOriginalScales={}
-
-local function isMyVisualPet(model)
-    if not model:IsA("Model") then return false end
-    if model:GetAttribute("PetKey")==nil or model:GetAttribute("PetName")==nil then return false end
-    if tonumber(model:GetAttribute("OwnerUserId"))~=LP.UserId then return false end
-    return model:FindFirstChild("RootPart")~=nil
-end
-
-local function getMyVisualPets()
-    local pets={}
-    local plots=WS:FindFirstChild("Plots")
-    if not plots then return pets end
-    for _,obj in ipairs(plots:GetDescendants()) do
-        if obj.Name=="Pets" then
-            for _,model in ipairs(obj:GetChildren()) do
-                if isMyVisualPet(model) then table.insert(pets,model) end
-            end
-        end
-    end
-    return pets
-end
-
-local function rememberVisualPetScale(pet)
-    if PetOriginalScales[pet]~=nil then return PetOriginalScales[pet] end
-    local okScale,scale=pcall(function() return pet:GetScale() end)
-    if okScale then PetOriginalScales[pet]=scale return scale end
-end
-
-local function applyVisualPetScale()
-    if not PetScaleEnabled then return end
-    for _,pet in ipairs(getMyVisualPets()) do
-        local original=rememberVisualPetScale(pet)
-        if original then pcall(function() pet:ScaleTo(original*PetScaleValue) end) end
-    end
-end
-
-local function restoreVisualPets()
-    for pet,original in pairs(PetOriginalScales) do
-        if pet and pet.Parent then pcall(function() pet:ScaleTo(original) end) end
-    end
-end
-
-local PetScaleToggle=toggleRow(VisualPage,48,"Scale Pet")
-
-local ScaleCard=Instance.new("Frame")
-ScaleCard.Position=UDim2.fromOffset(16,108); ScaleCard.Size=UDim2.new(1,-32,0,105)
-ScaleCard.BackgroundColor3=Color3.fromRGB(19,19,30); ScaleCard.BorderSizePixel=0; ScaleCard.Parent=VisualPage
-local ScaleCardCorner=Instance.new("UICorner"); ScaleCardCorner.CornerRadius=UDim.new(0,10); ScaleCardCorner.Parent=ScaleCard
-
-local ScaleValueLabel=Instance.new("TextLabel")
-ScaleValueLabel.Position=UDim2.fromOffset(14,10); ScaleValueLabel.Size=UDim2.new(1,-28,0,24)
-ScaleValueLabel.BackgroundTransparency=1; ScaleValueLabel.Font=Enum.Font.GothamSemibold
-ScaleValueLabel.Text="PET SIZE : 1.00x"; ScaleValueLabel.TextSize=11
-ScaleValueLabel.TextColor3=Color3.fromRGB(242,240,247); ScaleValueLabel.TextXAlignment=Enum.TextXAlignment.Left
-ScaleValueLabel.Parent=ScaleCard
-
-local ScaleSlider=Instance.new("Frame")
-ScaleSlider.Position=UDim2.fromOffset(14,57); ScaleSlider.Size=UDim2.new(1,-28,0,8)
-ScaleSlider.BackgroundColor3=Color3.fromRGB(48,46,59); ScaleSlider.BorderSizePixel=0; ScaleSlider.Parent=ScaleCard
-local ScaleSliderCorner=Instance.new("UICorner"); ScaleSliderCorner.CornerRadius=UDim.new(1,0); ScaleSliderCorner.Parent=ScaleSlider
-local ScaleFill=Instance.new("Frame"); ScaleFill.BackgroundColor3=Color3.fromRGB(159,37,238); ScaleFill.BorderSizePixel=0; ScaleFill.Parent=ScaleSlider
-local ScaleFillCorner=Instance.new("UICorner"); ScaleFillCorner.CornerRadius=UDim.new(1,0); ScaleFillCorner.Parent=ScaleFill
-local ScaleKnob=Instance.new("TextButton"); ScaleKnob.Size=UDim2.fromOffset(18,18); ScaleKnob.AnchorPoint=Vector2.new(.5,.5)
-ScaleKnob.BackgroundColor3=Color3.fromRGB(230,220,240); ScaleKnob.BorderSizePixel=0; ScaleKnob.Text=""; ScaleKnob.Parent=ScaleSlider
-local ScaleKnobCorner=Instance.new("UICorner"); ScaleKnobCorner.CornerRadius=UDim.new(1,0); ScaleKnobCorner.Parent=ScaleKnob
-
-local function setScaleVisualPercent(percent)
-    percent=math.clamp(percent,0,1)
-    PetScaleValue=PET_MIN_SIZE+(PET_MAX_SIZE-PET_MIN_SIZE)*percent
-    PetScaleValue=math.floor(PetScaleValue*100+.5)/100
-    ScaleFill.Size=UDim2.fromScale(percent,1)
-    ScaleKnob.Position=UDim2.new(percent,0,.5,0)
-    ScaleValueLabel.Text=string.format("PET SIZE : %.2fx",PetScaleValue)
-    if PetScaleEnabled then applyVisualPetScale() end
-end
-setScaleVisualPercent((PET_DEFAULT_SIZE-PET_MIN_SIZE)/(PET_MAX_SIZE-PET_MIN_SIZE))
-
-local ScaleDragging=false
-local function updateScaleFromX(x)
-    if ScaleSlider.AbsoluteSize.X<=0 then return end
-    setScaleVisualPercent((x-ScaleSlider.AbsolutePosition.X)/ScaleSlider.AbsoluteSize.X)
-end
-ScaleSlider.InputBegan:Connect(function(i)
-    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then ScaleDragging=true updateScaleFromX(i.Position.X) end
-end)
-ScaleKnob.InputBegan:Connect(function(i)
-    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then ScaleDragging=true end
-end)
-game:GetService("UserInputService").InputChanged:Connect(function(i)
-    if ScaleDragging and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then updateScaleFromX(i.Position.X) end
-end)
-game:GetService("UserInputService").InputEnded:Connect(function(i)
-    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then ScaleDragging=false end
-end)
-PetScaleToggle.MouseButton1Click:Connect(function()
-    PetScaleEnabled=not PetScaleEnabled
-    PetScaleToggle.Text=PetScaleEnabled and "ON" or "OFF"
-    PetScaleToggle.BackgroundColor3=PetScaleEnabled and Color3.fromRGB(159,37,238) or Color3.fromRGB(48,46,59)
-    if PetScaleEnabled then applyVisualPetScale() else restoreVisualPets() end
-    Status.Text=PetScaleEnabled and "STATUS: SCALE PET ON" or "STATUS: SCALE PET OFF"
-end)
-
-local TREE_WORDS={"tree","trees","pohon","trunk","foliage"}
-local TreeDeleteEnabled=false
-local TreeParts={}
-local TreeConnection=nil
-
-local function hasTreeWord(name)
-    name=string.lower(name)
-    for _,word in ipairs(TREE_WORDS) do
-        if string.find(name,word,1,true) then return true end
-    end
-    return false
-end
-local function isVisualTree(part)
-    local current=part
-    for _=1,7 do
-        if not current or current==WS then break end
-        if hasTreeWord(current.Name) then return true end
-        current=current.Parent
-    end
-    return false
-end
-local function isPlayerCharacterPart(part)
-    local model=part:FindFirstAncestorOfClass("Model")
-    if not model then return false end
-    for _,player in ipairs(Players:GetPlayers()) do if player.Character==model then return true end end
-    return false
-end
-local function hideVisualTreePart(part)
-    if not TreeDeleteEnabled or not part:IsA("BasePart") or TreeParts[part]~=nil then return end
-    if isPlayerCharacterPart(part) or not isVisualTree(part) then return end
-    TreeParts[part]=part.LocalTransparencyModifier
-    part.LocalTransparencyModifier=1
-end
-local function hideCurrentVisualTrees()
-    for _,obj in ipairs(WS:GetDescendants()) do if obj:IsA("BasePart") then hideVisualTreePart(obj) end end
-end
-local function startVisualTreeWatcher()
-    if TreeConnection then TreeConnection:Disconnect() end
-    TreeConnection=WS.DescendantAdded:Connect(function(obj)
-        if not TreeDeleteEnabled then return end
-        task.defer(function()
-            if TreeDeleteEnabled and obj and obj.Parent then
-                if obj:IsA("BasePart") then hideVisualTreePart(obj) end
-                if hasTreeWord(obj.Name) then
-                    for _,d in ipairs(obj:GetDescendants()) do if d:IsA("BasePart") then hideVisualTreePart(d) end end
-                end
-            end
-        end)
-    end)
-end
-local function showVisualTrees()
-    if TreeConnection then TreeConnection:Disconnect(); TreeConnection=nil end
-    for part,oldValue in pairs(TreeParts) do
-        if part and part.Parent then pcall(function() part.LocalTransparencyModifier=oldValue end) end
-    end
-    TreeParts={}
-end
-
-local TreeToggle=toggleRow(VisualPage,232,"Delete Tree")
-TreeToggle.MouseButton1Click:Connect(function()
-    TreeDeleteEnabled=not TreeDeleteEnabled
-    TreeToggle.Text=TreeDeleteEnabled and "ON" or "OFF"
-    TreeToggle.BackgroundColor3=TreeDeleteEnabled and Color3.fromRGB(159,37,238) or Color3.fromRGB(48,46,59)
-    if TreeDeleteEnabled then hideCurrentVisualTrees(); startVisualTreeWatcher() else showVisualTrees() end
-    Status.Text=TreeDeleteEnabled and "STATUS: DELETE TREE ON" or "STATUS: DELETE TREE OFF"
-end)
-
--- Keep newly streamed/spawned owned pets at the selected visual scale while Scale Pet is ON.
-WS.DescendantAdded:Connect(function(obj)
-    if PetScaleEnabled and obj:IsA("Model") then
-        task.defer(function()
-            if PetScaleEnabled and obj.Parent and isMyVisualPet(obj) then
-                local original=rememberVisualPetScale(obj)
-                if original then pcall(function() obj:ScaleTo(original*PetScaleValue) end) end
-            end
-        end)
-    end
-end)
 
 heading(MainPage,"AUTO PICKUP")
 local AutoToggle=toggleRow(MainPage,48,"Automatic Egg Pickup")
@@ -2221,19 +2024,16 @@ local function selectPage(page)
     local main=page=="MAIN"
     local esp=page=="ESP"
     local autoFeed=page=="AUTO_FEED"
-    local visual=page=="VISUAL"
     local settings=page=="SETTINGS"
-    MainPage.Visible=main; EspPage.Visible=esp; AutoFeedPage.Visible=autoFeed; VisualPage.Visible=visual; SettingsPage.Visible=settings
+    MainPage.Visible=main; EspPage.Visible=esp; AutoFeedPage.Visible=autoFeed; SettingsPage.Visible=settings
     MainNav.BackgroundColor3=main and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
     EspNav.BackgroundColor3=esp and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
     AutoFeedNav.BackgroundColor3=autoFeed and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
-    VisualNav.BackgroundColor3=visual and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
     SettingsNav.BackgroundColor3=settings and Color3.fromRGB(92,27,151) or Color3.fromRGB(16,15,27)
 end
 MainNav.MouseButton1Click:Connect(function() selectPage("MAIN") end)
 EspNav.MouseButton1Click:Connect(function() selectPage("ESP") end)
 AutoFeedNav.MouseButton1Click:Connect(function() selectPage("AUTO_FEED") end)
-VisualNav.MouseButton1Click:Connect(function() selectPage("VISUAL") end)
 SettingsNav.MouseButton1Click:Connect(function() selectPage("SETTINGS") end)
 selectPage("MAIN")
 
