@@ -39,7 +39,7 @@ local httpRequest =
 local BASE = "https://raw.githubusercontent.com/MINUTZ599/599-AREA/main/V9_PREVIEW/"
 
 local function run(path)
-    local src = game:HttpGet(BASE .. path .. "?v=20260923_1259_registerfix")
+    local src = game:HttpGet(BASE .. path .. "?v=20260923_1302_visual_module")
     local fn, err = loadstring(src)
     if not fn then
         error("[599 AREA V42] "..path.." compile error: "..tostring(err))
