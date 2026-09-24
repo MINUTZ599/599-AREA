@@ -327,6 +327,9 @@ end
 --========================================================
 
 local LAST_ARRIVAL_CLAIM = 0
+-- Exact Basket object accepted by the server for the current Auto Pickup trip.
+local ACTIVE_PICKUP_BASKET_EGG = nil
+local ACTIVE_PICKUP_EGG_NAME = nil
 
 local function sendAutoPickupArrivalClaim(root)
     if not root or not root.Parent then
@@ -348,19 +351,52 @@ local function sendAutoPickupArrivalClaim(root)
 
     local eggNames = {}
 
-    for _, child in ipairs(basket:GetChildren()) do
-        local breakAt = tonumber(child:GetAttribute("BreakAt"))
+    -- First use the EXACT Basket instance that was server-confirmed at pickup.
+    -- Do not lose it merely because the Basket was re-scanned later.
+    local tracked = ACTIVE_PICKUP_BASKET_EGG
+    if tracked then
+        local breakAt = tonumber(tracked:GetAttribute("BreakAt"))
+        local delivering = tracked:GetAttribute("Delivering")
 
-        if breakAt
+        print(
+            "[AUTO PICKUP] TRACKED AT BASE:",
+            tracked.Name,
+            "| PARENT:", tracked.Parent and tracked.Parent:GetFullName() or "nil",
+            "| BREAK:", breakAt,
+            "| NOW:", serverTimeNow,
+            "| DELIVERING:", tostring(delivering)
+        )
+
+        if tracked.Parent == basket
+            and breakAt
             and serverTimeNow <= breakAt + 0.5
-            and not child:GetAttribute("Delivering")
+            and not delivering
         then
-            table.insert(eggNames, child.Name)
+            table.insert(eggNames, tracked.Name)
+        end
+    end
+
+    -- Fallback to the official client's normal Basket enumeration.
+    if #eggNames == 0 then
+        for _, child in ipairs(basket:GetChildren()) do
+            local breakAt = tonumber(child:GetAttribute("BreakAt"))
+            if breakAt
+                and serverTimeNow <= breakAt + 0.5
+                and not child:GetAttribute("Delivering")
+            then
+                table.insert(eggNames, child.Name)
+                if #eggNames >= 64 then
+                    break
+                end
+            end
         end
     end
 
     if #eggNames == 0 then
-        warn("[AUTO PICKUP] No valid carried egg for arrival claim")
+        warn(
+            "[AUTO PICKUP] No valid carried egg for arrival claim",
+            "| TRACKED:", ACTIVE_PICKUP_EGG_NAME or "nil"
+        )
         return false
     end
 
@@ -841,6 +877,8 @@ local function pickupEgg(target)
 
                 if breakAt and serverNow <= breakAt + 0.5 then
                     confirmedBasketEgg = child
+                    ACTIVE_PICKUP_BASKET_EGG = child
+                    ACTIVE_PICKUP_EGG_NAME = child.Name
                     print(
                         "[AUTO PICKUP] SERVER CONFIRMED:",
                         child.Name,
