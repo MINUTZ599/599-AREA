@@ -6,6 +6,9 @@ return function(ctx)
     local button=ctx.Button
     local UIS=game:GetService("UserInputService")
     local state={Enabled=false,Active={}}
+    local renderedConnection=nil
+    local workspaceConnection=nil
+
 
     local function removeAll()
         for h in pairs(state.Active) do
@@ -42,6 +45,39 @@ return function(ctx)
         end
     end
 
+    local function hookRenderedFolder(folder)
+        if renderedConnection then renderedConnection:Disconnect(); renderedConnection=nil end
+        if not folder then return end
+        renderedConnection=folder.ChildAdded:Connect(function(egg)
+            if not state.Enabled then return end
+            task.defer(function()
+                if state.Enabled and egg.Parent==folder then
+                    local h=egg:FindFirstChild("599_EGG_HIGHLIGHT")
+                    if not h then
+                        h=Instance.new("Highlight")
+                        h.Name="599_EGG_HIGHLIGHT"
+                        h.Adornee=egg
+                        h.FillColor=Color3.fromRGB(190,0,255)
+                        h.OutlineColor=Color3.fromRGB(255,80,255)
+                        h.FillTransparency=.1
+                        h.OutlineTransparency=0
+                        h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+                        h.Parent=egg
+                    end
+                    state.Active[h]=true
+                end
+            end)
+        end)
+    end
+
+    hookRenderedFolder(WS:FindFirstChild("RenderedEggs"))
+    workspaceConnection=WS.ChildAdded:Connect(function(child)
+        if child.Name=="RenderedEggs" then
+            hookRenderedFolder(child)
+            if state.Enabled then task.defer(refresh) end
+        end
+    end)
+
     local function setEnabled(on)
         state.Enabled=on==true
         button.Text=state.Enabled and "ON" or "OFF"
@@ -61,6 +97,8 @@ return function(ctx)
             task.wait(.4)
         end
         removeAll()
+        if renderedConnection then renderedConnection:Disconnect() end
+        if workspaceConnection then workspaceConnection:Disconnect() end
     end)
 
     RunService.RenderStepped:Connect(function()
