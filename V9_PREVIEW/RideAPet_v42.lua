@@ -707,8 +707,9 @@ local function getTargets()
 
                     and prompt:IsA("ProximityPrompt")
 
-                    and prompt.Enabled
-
+                    -- Pyramid/remote eggs may be rendered before the client
+                    -- enables their Pickup prompt. Do not hide them from
+                    -- target discovery; pickupEgg still validates the prompt.
                 then
 
                     local position =
