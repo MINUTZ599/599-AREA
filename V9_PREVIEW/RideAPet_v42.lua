@@ -551,7 +551,22 @@ local function walkToBase()
             return false
         end
 
-                if os.clock() - lastMove >= 0.75 then
+                -- Claim on the FIRST frame we are actually inside our Baseplate.
+        -- Do not wait for the saved return coordinate / MoveTo completion.
+        local liveBaseplate = findBaseplate()
+        if liveBaseplate and rootInsideBaseplateXZ(root, liveBaseplate) then
+            local claimed = sendAutoPickupArrivalClaim(root)
+            if claimed then
+                print("[AUTO PICKUP] CLAIMED ON BASEPLATE ENTRY")
+            end
+            task.spawn(forceStopOnBaseplate)
+            while myCycle == RETURN_CYCLE_ID and not RETURN_COMPLETE do
+                task.wait()
+            end
+            return RETURN_COMPLETE
+        end
+
+        if os.clock() - lastMove >= 0.75 then
             -- Re-check cycle immediately before MoveTo.
             if myCycle ~= RETURN_CYCLE_ID or RETURN_COMPLETE then
                 stopCharacter(root, humanoid)
@@ -845,6 +860,9 @@ local function pickupEgg(target)
             )
 
             -- Return starts ONLY after the server has accepted the pickup.
+            -- Keep the exact server-confirmed Basket instance for this trip.
+            -- The Baseplate watcher will still claim normally; this prevents
+            -- the return routine from losing track of the freshly accepted egg.
             task.wait(0.10)
 
             local arrived = walkToBase()
