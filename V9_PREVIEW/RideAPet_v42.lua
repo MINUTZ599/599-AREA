@@ -918,6 +918,28 @@ local function pickupEgg(target)
                 sendAutoPickupArrivalClaim(liveRoot)
                 print("[AUTO PICKUP] ARRIVAL CLAIM ATTEMPTED")
 
+                -- Direct Baseplate TP bypasses the old forceStopOnBaseplate()
+                -- path, so preserve the existing Auto Unequip setting here.
+                if AUTO_UNEQUIP_EGG then
+                    local _, _, liveHumanoid = getCharacter()
+                    if liveHumanoid and liveHumanoid.Parent then
+                        local unequipCharacter = liveHumanoid.Parent
+                        local unequipStarted = os.clock()
+                        repeat
+                            if not AUTO_UNEQUIP_EGG
+                                or not liveHumanoid.Parent
+                                or liveHumanoid.Health <= 0
+                                or liveHumanoid.Parent ~= unequipCharacter
+                            then
+                                break
+                            end
+                            liveHumanoid:UnequipTools()
+                            RunService.Heartbeat:Wait()
+                        until os.clock() - unequipStarted >= 1.25
+                        print("[599 SETTINGS] Auto Unequip Egg: release cycle completed at Baseplate")
+                    end
+                end
+
                 -- Give the delivery a moment to settle, then continue to
                 -- the next selected egg while Auto Pickup remains ON.
                 task.wait(0.20)
