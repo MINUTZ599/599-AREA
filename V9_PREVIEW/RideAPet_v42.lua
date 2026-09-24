@@ -903,13 +903,31 @@ local function pickupEgg(target)
             -- the return routine from losing track of the freshly accepted egg.
             task.wait(0.10)
 
-            -- TEMP DIAGNOSTIC: keep the confirmed egg stationary.
-            -- Do NOT start the 3-coordinate return for this test.
-            print("[AUTO PICKUP TEST] SERVER CONFIRMED - RETURN PAUSED")
-            print("[AUTO PICKUP TEST] Walk/move to your Baseplate normally now")
-            WALKING_HOME = false
+            -- TEMP DIAGNOSTIC #2:
+            -- After the server confirms the pickup, teleport directly into
+            -- the owner's Baseplate instead of using the 3-coordinate return.
+            print("[AUTO PICKUP TEST] SERVER CONFIRMED - DIRECT BASEPLATE TP")
 
-            -- Pause Auto Pickup so it does not target another egg during the test.
+            local baseplate = findBaseplate()
+            local character, liveRoot = getCharacter()
+
+            if baseplate and liveRoot then
+                -- DeliveryRules.Contains only needs the root inside the
+                -- Baseplate X/Z footprint. Put it safely above the center.
+                liveRoot.CFrame = baseplate.CFrame * CFrame.new(0, baseplate.Size.Y / 2 + 3, 0)
+                print("[AUTO PICKUP TEST] TP TO BASEPLATE")
+                task.wait(0.15)
+
+                -- Keep the exact server-confirmed Basket egg and make the
+                -- arrival claim immediately after entering the Baseplate.
+                sendAutoPickupArrivalClaim(liveRoot)
+                print("[AUTO PICKUP TEST] ARRIVAL CLAIM ATTEMPTED")
+            else
+                warn("[AUTO PICKUP TEST] BASEPLATE/ROOT NOT FOUND")
+            end
+
+            -- One egg per diagnostic run so the result is easy to read.
+            WALKING_HOME = false
             AUTO = false
 
             return true
