@@ -903,11 +903,14 @@ local function pickupEgg(target)
             -- the return routine from losing track of the freshly accepted egg.
             task.wait(0.10)
 
-            local arrived = walkToBase()
+            -- TEMP DIAGNOSTIC: keep the confirmed egg stationary.
+            -- Do NOT start the 3-coordinate return for this test.
+            print("[AUTO PICKUP TEST] SERVER CONFIRMED - RETURN PAUSED")
+            print("[AUTO PICKUP TEST] Walk/move to your Baseplate normally now")
+            WALKING_HOME = false
 
-            if arrived then
-                print("[READY]", "At saved position")
-            end
+            -- Pause Auto Pickup so it does not target another egg during the test.
+            AUTO = false
 
             return true
         end
