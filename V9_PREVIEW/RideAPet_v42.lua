@@ -46,6 +46,7 @@ local Plots = WS:WaitForChild("Plots")
 -- arrival claim when the carried egg reaches the owner Baseplate.
 local GameRemotes = RS:WaitForChild("Remotes"):WaitForChild("Game")
 local EggArrivalClaim = GameRemotes:WaitForChild("EggArrivalClaim")
+local EggPickup = GameRemotes:WaitForChild("EggPickup")
 
 --========================================================
 
@@ -797,76 +798,72 @@ local function pickupEgg(target)
 
     end
 
-    print("[ACTION] Trigger Pickup")
+    print("[ACTION] Server Pickup:", target.Egg.Name)
 
-    fireproximityprompt(
+    -- Snapshot Basket BEFORE the request.  The updated game considers the
+    -- pickup successful only after the server creates a new Basket entry.
+    local basket = LP:WaitForChild("Basket")
+    local beforePickup = {}
+    for _, child in ipairs(basket:GetChildren()) do
+        beforePickup[child] = true
+    end
 
-        target.Prompt
+    -- Use the same server request as the current Ride A Pet client.
+    -- Keep fireproximityprompt as a compatibility fallback only.
+    local requestOk = pcall(function()
+        EggPickup:FireServer(target.Egg.Name)
+    end)
 
-    )
+    if not requestOk then
+        fireproximityprompt(target.Prompt)
+    end
 
     --====================================================
-
-    -- WAIT FOR SUCCESS
-
+    -- WAIT FOR SERVER-CONFIRMED BASKET ENTRY
     --====================================================
 
     local started = os.clock()
+    local confirmedBasketEgg = nil
 
-    while
+    while AUTO and os.clock() - started < PICKUP_TIMEOUT do
+        for _, child in ipairs(basket:GetChildren()) do
+            if not beforePickup[child] then
+                local breakAt = tonumber(child:GetAttribute("BreakAt"))
+                local serverNow = WS:GetServerTimeNow()
 
-        AUTO
+                if breakAt and serverNow <= breakAt + 0.5 then
+                    confirmedBasketEgg = child
+                    print(
+                        "[AUTO PICKUP] SERVER CONFIRMED:",
+                        child.Name,
+                        "| TIME LEFT:",
+                        breakAt - serverNow
+                    )
+                    break
+                end
+            end
+        end
 
-        and os.clock() - started
-
-            < PICKUP_TIMEOUT
-
-    do
-
-        if not target.Egg.Parent then
-
+        if confirmedBasketEgg then
             print(
-
                 "[SUCCESS]",
-
                 target.Egg.Name,
-
                 "(" .. target.Rarity .. ")"
-
             )
 
-            --============================================
-
-            -- NEW:
-
-            -- WALK HOME INSTEAD OF TELEPORTING HOME
-
-            --============================================
-
+            -- Return starts ONLY after the server has accepted the pickup.
             task.wait(0.10)
 
-            local arrived =
-
-                walkToBase()
+            local arrived = walkToBase()
 
             if arrived then
-
-                print(
-
-                    "[READY]",
-
-                    "At saved position"
-
-                )
-
+                print("[READY]", "At saved position")
             end
 
             return true
-
         end
 
         task.wait(0.05)
-
     end
 
     warn(
