@@ -798,25 +798,18 @@ local function pickupEgg(target)
 
     end
 
-    print("[ACTION] Server Pickup:", target.Egg.Name)
+    print("[ACTION] Trigger Pickup:", target.Egg.Name)
 
-    -- Snapshot Basket BEFORE the request.  The updated game considers the
-    -- pickup successful only after the server creates a new Basket entry.
+    -- Snapshot Basket BEFORE pickup, then use the game's actual
+    -- ProximityPrompt path.  Direct EggPickup requests can be rejected
+    -- when the prompt/client visibility state has not been satisfied.
     local basket = LP:WaitForChild("Basket")
     local beforePickup = {}
     for _, child in ipairs(basket:GetChildren()) do
         beforePickup[child] = true
     end
 
-    -- Use the same server request as the current Ride A Pet client.
-    -- Keep fireproximityprompt as a compatibility fallback only.
-    local requestOk = pcall(function()
-        EggPickup:FireServer(target.Egg.Name)
-    end)
-
-    if not requestOk then
-        fireproximityprompt(target.Prompt)
-    end
+    fireproximityprompt(target.Prompt)
 
     --====================================================
     -- WAIT FOR SERVER-CONFIRMED BASKET ENTRY
