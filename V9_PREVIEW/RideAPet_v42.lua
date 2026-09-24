@@ -557,22 +557,6 @@ local function walkToBase()
                 return RETURN_COMPLETE
             end
 
-            -- Keep the existing return route, but prevent the return movement
-            -- from inheriting/accumulating extreme horizontal velocity while
-            -- carrying an egg. Do not touch the player's configured WalkSpeed.
-            local velocity = root.AssemblyLinearVelocity
-            local horizontal = Vector3.new(velocity.X, 0, velocity.Z)
-            local maxHorizontalSpeed = math.max(humanoid.WalkSpeed * 1.35, 80)
-
-            if horizontal.Magnitude > maxHorizontalSpeed then
-                local limited = horizontal.Unit * maxHorizontalSpeed
-                root.AssemblyLinearVelocity = Vector3.new(
-                    limited.X,
-                    velocity.Y,
-                    limited.Z
-                )
-            end
-
             humanoid:MoveTo(destination)
             lastMove = os.clock()
         end
