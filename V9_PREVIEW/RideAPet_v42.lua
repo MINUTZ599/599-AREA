@@ -311,8 +311,9 @@ local function rootInsideBaseplateXZ(root, baseplate)
 
     local half = baseplate.Size / 2
 
-    -- Small margin makes edge detection safer.
-    local margin = 6
+    -- Match Ride A Pet's EggDeliveryRules.Contains exactly.
+    -- The official client accepts only the Baseplate X/Z footprint + 2 studs.
+    local margin = 2
 
     return math.abs(localPos.X) <= half.X + margin
         and math.abs(localPos.Z) <= half.Z + margin
