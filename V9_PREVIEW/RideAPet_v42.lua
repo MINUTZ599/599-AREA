@@ -42,6 +42,11 @@ local RenderedEggs = WS:WaitForChild("RenderedEggs")
 
 local Plots = WS:WaitForChild("Plots")
 
+-- Auto Pickup delivery update (2026-09-24): Ride A Pet now requires an
+-- arrival claim when the carried egg reaches the owner Baseplate.
+local GameRemotes = RS:WaitForChild("Remotes"):WaitForChild("Game")
+local EggArrivalClaim = GameRemotes:WaitForChild("EggArrivalClaim")
+
 --========================================================
 
 -- LOAD EGG DATA
@@ -313,6 +318,66 @@ local function rootInsideBaseplateXZ(root, baseplate)
         and math.abs(localPos.Z) <= half.Z + margin
 end
 
+--========================================================
+-- UPDATED DELIVERY CLAIM
+-- Mirrors the current Ride A Pet client delivery contract discovered
+-- from BreakTimer. This is intentionally scoped to Auto Pickup only.
+--========================================================
+
+local LAST_ARRIVAL_CLAIM = 0
+
+local function sendAutoPickupArrivalClaim(root)
+    if not root or not root.Parent then
+        return false
+    end
+
+    local basket = LP:FindFirstChild("Basket")
+    if not basket then
+        warn("[AUTO PICKUP] Basket missing at Baseplate")
+        return false
+    end
+
+    local serverTimeNow = WS:GetServerTimeNow()
+
+    -- Match the game's 0.25 s claim throttle.
+    if serverTimeNow < LAST_ARRIVAL_CLAIM then
+        return false
+    end
+
+    local eggNames = {}
+
+    for _, child in ipairs(basket:GetChildren()) do
+        local breakAt = tonumber(child:GetAttribute("BreakAt"))
+
+        if breakAt
+            and serverTimeNow <= breakAt + 0.5
+            and not child:GetAttribute("Delivering")
+        then
+            table.insert(eggNames, child.Name)
+        end
+    end
+
+    if #eggNames == 0 then
+        warn("[AUTO PICKUP] No valid carried egg for arrival claim")
+        return false
+    end
+
+    LAST_ARRIVAL_CLAIM = serverTimeNow + 0.25
+
+    EggArrivalClaim:FireServer(
+        serverTimeNow,
+        root.Position,
+        eggNames
+    )
+
+    print(
+        "[AUTO PICKUP] Arrival claim sent:",
+        table.concat(eggNames, ", ")
+    )
+
+    return true
+end
+
 local function forceStopOnBaseplate()
     if BASEPLATE_STOP_BUSY then
         return
@@ -322,6 +387,15 @@ local function forceStopOnBaseplate()
 
     local _, root, humanoid = getCharacter()
     local finishedIndex = ACTIVE_RETURN_INDEX
+
+    -- IMPORTANT: claim delivery while HRP is still physically inside the
+    -- owner's Baseplate, before stopping/invalidating the walk cycle.
+    -- The game's current server contract expects:
+    -- server time, HRP position, and carried egg names.
+    sendAutoPickupArrivalClaim(root)
+
+    -- Give the server a short moment to accept/update delivery state.
+    task.wait(0.12)
 
     -- Invalidate every active/stale return loop first.
     -- Finish this return only; AUTO intentionally stays ON.
