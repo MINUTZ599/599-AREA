@@ -11,9 +11,9 @@ return function(ctx)
 
 
     local function removeAll()
-        for egg,h in pairs(state.Active) do
+        for h in pairs(state.Active) do
             if h and h.Parent then h:Destroy() end
-            state.Active[egg]=nil
+            state.Active[h]=nil
         end
         local folder=WS:FindFirstChild("RenderedEggs")
         if folder then
@@ -28,16 +28,9 @@ return function(ctx)
         if not state.Enabled then return end
         local folder=WS:FindFirstChild("RenderedEggs")
         if not folder then return end
-
-        -- Use every currently replicated egg model/part immediately.
-        -- Parent the Highlight outside the streamed egg itself so it is not
-        -- lost/recreated with descendants as distant egg content streams.
         for _,egg in ipairs(folder:GetChildren()) do
-            local h=state.Active[egg]
-            if not (h and h.Parent and h.Adornee==egg) then
-                local old=egg:FindFirstChild("599_EGG_HIGHLIGHT")
-                if old then old:Destroy() end
-
+            local h=egg:FindFirstChild("599_EGG_HIGHLIGHT")
+            if not h then
                 h=Instance.new("Highlight")
                 h.Name="599_EGG_HIGHLIGHT"
                 h.Adornee=egg
@@ -46,24 +39,34 @@ return function(ctx)
                 h.FillTransparency=.1
                 h.OutlineTransparency=0
                 h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
-                h.Parent=folder
-                state.Active[egg]=h
+                h.Parent=egg
             end
-        end
-
-        for egg,h in pairs(state.Active) do
-            if typeof(egg)=="Instance" and (not egg.Parent or egg.Parent~=folder) then
-                if h and h.Parent then h:Destroy() end
-                state.Active[egg]=nil
-            end
+            state.Active[h]=true
         end
     end
 
     local function hookRenderedFolder(folder)
         if renderedConnection then renderedConnection:Disconnect(); renderedConnection=nil end
         if not folder then return end
-        renderedConnection=folder.ChildAdded:Connect(function()
-            if state.Enabled then task.defer(refresh) end
+        renderedConnection=folder.ChildAdded:Connect(function(egg)
+            if not state.Enabled then return end
+            task.defer(function()
+                if state.Enabled and egg.Parent==folder then
+                    local h=egg:FindFirstChild("599_EGG_HIGHLIGHT")
+                    if not h then
+                        h=Instance.new("Highlight")
+                        h.Name="599_EGG_HIGHLIGHT"
+                        h.Adornee=egg
+                        h.FillColor=Color3.fromRGB(190,0,255)
+                        h.OutlineColor=Color3.fromRGB(255,80,255)
+                        h.FillTransparency=.1
+                        h.OutlineTransparency=0
+                        h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+                        h.Parent=egg
+                    end
+                    state.Active[h]=true
+                end
+            end)
         end)
     end
 
@@ -101,13 +104,12 @@ return function(ctx)
     RunService.RenderStepped:Connect(function()
         if not state.Enabled then return end
         local t=.05+.30*((math.sin(tick()*3)+1)/2)
-        for egg,h in pairs(state.Active) do
-            if h and h.Parent and egg and egg.Parent then
+        for h in pairs(state.Active) do
+            if h and h.Parent then
                 h.FillTransparency=t
                 h.OutlineTransparency=0
             else
-                if h and h.Parent then h:Destroy() end
-                state.Active[egg]=nil
+                state.Active[h]=nil
             end
         end
     end)
