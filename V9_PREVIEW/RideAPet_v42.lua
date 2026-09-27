@@ -904,51 +904,20 @@ local function pickupEgg(target)
             -- the return routine from losing track of the freshly accepted egg.
             task.wait(0.10)
 
-            -- FINAL AUTO PICKUP RETURN:
-            -- After the server confirms the pickup, teleport directly into
-            -- the owner's Baseplate and claim the carried egg immediately.
-            local baseplate = findBaseplate()
-            local _, liveRoot = getCharacter()
+            -- TEST RETURN FLOW (3 COORDINATES):
+            -- Do NOT teleport directly to Baseplate. After pickup is
+            -- server-confirmed, use the existing nearest return coordinate
+            -- and let walkToBase() finish naturally on our Baseplate.
+            print("[AUTO PICKUP TEST] USING 3-COORD RETURN FLOW")
+            local returnedHome = walkToBase()
 
-            if baseplate and liveRoot then
-                liveRoot.CFrame = baseplate.CFrame * CFrame.new(0, baseplate.Size.Y / 2 + 3, 0)
-                print("[AUTO PICKUP] TP TO BASEPLATE")
-                task.wait(0.15)
-
-                sendAutoPickupArrivalClaim(liveRoot)
-                print("[AUTO PICKUP] ARRIVAL CLAIM ATTEMPTED")
-
-                -- Direct Baseplate TP bypasses the old forceStopOnBaseplate()
-                -- path, so preserve the existing Auto Unequip setting here.
-                if AUTO_UNEQUIP_EGG then
-                    local _, _, liveHumanoid = getCharacter()
-                    if liveHumanoid and liveHumanoid.Parent then
-                        local unequipCharacter = liveHumanoid.Parent
-                        local unequipStarted = os.clock()
-                        repeat
-                            if not AUTO_UNEQUIP_EGG
-                                or not liveHumanoid.Parent
-                                or liveHumanoid.Health <= 0
-                                or liveHumanoid.Parent ~= unequipCharacter
-                            then
-                                break
-                            end
-                            liveHumanoid:UnequipTools()
-                            RunService.Heartbeat:Wait()
-                        until os.clock() - unequipStarted >= 1.25
-                        print("[599 SETTINGS] Auto Unequip Egg: release cycle completed at Baseplate")
-                    end
-                end
-
-                -- Give the delivery a moment to settle, then continue to
-                -- the next selected egg while Auto Pickup remains ON.
-                task.wait(0.20)
+            if returnedHome then
+                print("[AUTO PICKUP TEST] 3-COORD RETURN COMPLETE")
             else
-                warn("[AUTO PICKUP] BASEPLATE/ROOT NOT FOUND")
+                warn("[AUTO PICKUP TEST] 3-COORD RETURN FAILED")
             end
 
-            WALKING_HOME = false
-            return true
+            return returnedHome
         end
 
         task.wait(0.05)
